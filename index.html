@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Family Kitchen</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f9f9f9; }
+        header { text-align: center; margin-bottom: 30px; }
+        
+        .container { display: flex; gap: 20px; max-width: 1200px; margin: 0 auto; }
+        
+        /* Product Grid */
+        .products { flex: 3; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .product-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
+        .product-card img { max-width: 100%; border-radius: 4px; height: 150px; object-fit: cover; }
+        .price { font-size: 1.2em; font-weight: bold; color: #2ecc71; margin: 10px 0; }
+        button { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold;}
+        button:hover { background: #2980b9; }
+
+        /* Shopping Cart */
+        .cart-section { flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); height: fit-content; position: sticky; top: 20px; }
+        .cart-item { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .whatsapp-btn { background: #25D366; margin-top: 15px; }
+        .whatsapp-btn:hover { background: #20b858; }
+        
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Our Family Kitchen</h1>
+        <p>Homemade Pickles & Snacks delivered to you.</p>
+    </header>
+
+    <div class="container">
+        <div class="products" id="product-list">
+            <p>Loading fresh items from the kitchen...</p>
+        </div>
+
+        <div class="cart-section">
+            <h3>Your Cart</h3>
+            <div id="cart-items">
+                <p>Cart is empty</p>
+            </div>
+            <h3 style="margin-top: 20px;">Total: ₹<span id="cart-total">0</span></h3>
+            <button class="whatsapp-btn" onclick="checkoutWhatsApp()">Buy via WhatsApp</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. CONFIGURATION ---
+        // Paste your published CSV link here:
+        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQkdpMJkEjlGqWVQmKUy9GZk_tabKkAxxgDrW5SGpe2r3vL-uoWOInuvhomxTdsrihJEhqfKvAQHFAK/pub?output=csv'; 
+        // Add your country code (91 for India) and number without + or spaces:
+        const WHATSAPP_NUMBER = '918590360735'; 
+
+        // --- 2. APP LOGIC ---
+        let cart = [];
+
+        // Fetch products from Google Sheets
+        Papa.parse(SHEET_CSV_URL, {
+            download: true,
+            header: true,
+            complete: function(results) {
+                displayProducts(results.data);
+            }
+        });
+
+        function displayProducts(products) {
+            const productList = document.getElementById('product-list');
+            productList.innerHTML = ''; // Clear loading text
+
+            products.forEach(product => {
+                if(!product.name) return; // Skip empty rows
+
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <img src="${product.image}" alt="${product.name}">
+                    <h3>${product.name}</h3>
+                    <p style="font-size: 0.9em; color: #666;">${product.description}</p>
+                    <div class="price">₹${product.price}</div>
+                    <button onclick="addToCart('${product.name}', ${product.price})">Add to Cart</button>
+                `;
+                productList.appendChild(card);
+            });
+        }
+
+        function addToCart(name, price) {
+            // Check if item already in cart
+            let existingItem = cart.find(item => item.name === name);
+            if (existingItem) {
+                existingItem.qty += 1;
+            } else {
+                cart.push({ name: name, price: Number(price), qty: 1 });
+            }
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const cartItemsContainer = document.getElementById('cart-items');
+            const cartTotal = document.getElementById('cart-total');
+            
+            cartItemsContainer.innerHTML = '';
+            let total = 0;
+
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = '<p>Cart is empty</p>';
+            }
+
+            cart.forEach(item => {
+                total += item.price * item.qty;
+                cartItemsContainer.innerHTML += `
+                    <div class="cart-item">
+                        <span>${item.name} (x${item.qty})</span>
+                        <span>₹${item.price * item.qty}</span>
+                    </div>
+                `;
+            });
+
+            cartTotal.innerText = total;
+        }
+
+        function checkoutWhatsApp() {
+            if (cart.length === 0) {
+                alert("Please add items to your cart first!");
+                return;
+            }
+
+            let message = "Hello! I would like to order:\n\n";
+            let total = 0;
+
+            cart.forEach(item => {
+                message += `- ${item.name} (x${item.qty}): ₹${item.price * item.qty}\n`;
+                total += item.price * item.qty;
+            });
+
+            message += `\n*Total Amount: ₹${total}*\n\nPlease let me know how to pay and provide delivery details.`;
+
+            // Encode the message for a URL and open WhatsApp
+            const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+    </script>
+</body>
+</html>
