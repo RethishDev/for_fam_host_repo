@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sasreya</title>
+    <title>Sasreya Foods</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f9f9f9; }
@@ -12,16 +12,27 @@
         .container { display: flex; gap: 20px; max-width: 1200px; margin: 0 auto; }
         
         /* Product Grid */
-        .products { flex: 3; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .products { flex: 3; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
         .product-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
-        .product-card img { max-width: 100%; border-radius: 4px; height: 150px; object-fit: cover; }
-        .price { font-size: 1.2em; font-weight: bold; color: #2ecc71; margin: 10px 0; }
-        button { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold;}
+        .product-card img { max-width: 100%; border-radius: 4px; height: 160px; object-fit: cover; }
+        .price { font-size: 1.2em; font-weight: bold; color: #2ecc71; margin: 5px 0; }
+        
+        /* Form & Buttons */
+        .weight-select { width: 100%; padding: 8px; margin: 10px 0; border-radius: 5px; border: 1px solid #ddd; font-family: inherit; font-size: 1em; }
+        button { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.2s;}
         button:hover { background: #2980b9; }
+        
+        /* Quantity Controls (- 1 +) */
+        .qty-controls { display: flex; align-items: center; justify-content: space-between; background: #f1f1f1; border-radius: 5px; height: 39px; }
+        .qty-controls button { width: 35%; background: transparent; color: #333; font-size: 1.2em; padding: 0; height: 100%; }
+        .qty-controls button:hover { background: #e2e2e2; }
+        .qty-controls span { width: 30%; font-weight: bold; }
 
         /* Shopping Cart */
-        .cart-section { flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); height: fit-content; position: sticky; top: 20px; }
-        .cart-item { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .cart-section { flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); height: fit-content; position: sticky; top: 20px; min-width: 280px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .cart-item-details { text-align: left; }
+        .cart-item-details small { color: #666; display: block; margin-top: 3px;}
         .whatsapp-btn { background: #25D366; margin-top: 15px; }
         .whatsapp-btn:hover { background: #20b858; }
         
@@ -54,50 +65,114 @@
 
     <script>
         // --- 1. CONFIGURATION ---
-        // Paste your published CSV link here:
         const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQkdpMJkEjlGqWVQmKUy9GZk_tabKkAxxgDrW5SGpe2r3vL-uoWOInuvhomxTdsrihJEhqfKvAQHFAK/pub?output=csv'; 
-        // Add your country code (91 for India) and number without + or spaces:
         const WHATSAPP_NUMBER = '918590360735'; 
 
         // --- 2. APP LOGIC ---
         let cart = [];
+        let globalProducts = []; // Stores products so we can reference them later
 
-        // Fetch products from Google Sheets
         Papa.parse(SHEET_CSV_URL, {
             download: true,
             header: true,
             complete: function(results) {
-                displayProducts(results.data);
+                globalProducts = results.data.filter(p => p.name); // Remove empty rows
+                displayProducts();
             }
         });
 
-        function displayProducts(products) {
+        function displayProducts() {
             const productList = document.getElementById('product-list');
-            productList.innerHTML = ''; // Clear loading text
+            productList.innerHTML = ''; 
 
-            products.forEach(product => {
-                if(!product.name) return; // Skip empty rows
-
+            globalProducts.forEach((product, index) => {
                 const card = document.createElement('div');
                 card.className = 'product-card';
                 card.innerHTML = `
                     <img src="${product.image}" alt="${product.name}">
                     <h3>${product.name}</h3>
-                    <p style="font-size: 0.9em; color: #666;">${product.description}</p>
-                    <div class="price">₹${product.price}</div>
-                    <button onclick="addToCart('${product.name}', ${product.price})">Add to Cart</button>
+                    <p style="font-size: 0.9em; color: #666; margin-bottom: 5px;">${product.description}</p>
+                    
+                    <select id="weight-${index}" class="weight-select" onchange="updateCardActionUI(${index})">
+                        <option value="0.25">¼ kg</option>
+                        <option value="0.5">½ kg</option>
+                        <option value="1" selected>1 kg</option>
+                        <option value="2">2 kg</option>
+                    </select>
+                    
+                    <div class="price" id="price-${index}">₹${product.price}</div>
+                    <div id="action-${index}"></div>
                 `;
                 productList.appendChild(card);
+                updateCardActionUI(index); // Sets the initial price and button state
             });
         }
 
-        function addToCart(name, price) {
-            // Check if item already in cart
-            let existingItem = cart.find(item => item.name === name);
-            if (existingItem) {
-                existingItem.qty += 1;
+        // Updates a specific product card (Price text & Button State)
+        function updateCardActionUI(index) {
+            const select = document.getElementById(`weight-${index}`);
+            const weightLabel = select.options[select.selectedIndex].text;
+            const weightMultiplier = parseFloat(select.value);
+            
+            const product = globalProducts[index];
+            const basePrice = parseFloat(product.price);
+            
+            // Calculate dynamic price based on weight selected
+            const currentPrice = Math.round(basePrice * weightMultiplier);
+            document.getElementById(`price-${index}`).innerText = `₹${currentPrice}`;
+
+            // Check if THIS specific size is already in the cart
+            const cartItem = cart.find(i => i.name === product.name && i.weightLabel === weightLabel);
+            const actionContainer = document.getElementById(`action-${index}`);
+
+            if (cartItem) {
+                // If in cart, show - 1 + buttons
+                actionContainer.innerHTML = `
+                    <div class="qty-controls">
+                        <button onclick="updateQtyFromCard(${index}, -1)">-</button>
+                        <span>${cartItem.qty}</span>
+                        <button onclick="updateQtyFromCard(${index}, 1)">+</button>
+                    </div>
+                `;
             } else {
-                cart.push({ name: name, price: Number(price), qty: 1 });
+                // If not in cart, show Add button
+                actionContainer.innerHTML = `
+                    <button onclick="addToCart(${index}, ${currentPrice})">Add to Cart</button>
+                `;
+            }
+        }
+
+        function addToCart(index, calculatedPrice) {
+            const select = document.getElementById(`weight-${index}`);
+            const weightLabel = select.options[select.selectedIndex].text;
+            const product = globalProducts[index];
+
+            cart.push({ 
+                name: product.name, 
+                weightLabel: weightLabel, 
+                price: calculatedPrice, 
+                qty: 1 
+            });
+            
+            updateCartUI();
+        }
+
+        // Handles + / - clicks directly from the product cards
+        function updateQtyFromCard(index, change) {
+            const product = globalProducts[index];
+            const select = document.getElementById(`weight-${index}`);
+            const weightLabel = select.options[select.selectedIndex].text;
+            changeCartQty(product.name, weightLabel, change);
+        }
+
+        // Core function to change quantity anywhere
+        function changeCartQty(name, weightLabel, change) {
+            const itemIndex = cart.findIndex(i => i.name === name && i.weightLabel === weightLabel);
+            if (itemIndex > -1) {
+                cart[itemIndex].qty += change;
+                if (cart[itemIndex].qty <= 0) {
+                    cart.splice(itemIndex, 1); // Remove item if quantity hits 0
+                }
             }
             updateCartUI();
         }
@@ -117,13 +192,27 @@
                 total += item.price * item.qty;
                 cartItemsContainer.innerHTML += `
                     <div class="cart-item">
-                        <span>${item.name} (x${item.qty})</span>
-                        <span>₹${item.price * item.qty}</span>
+                        <div class="cart-item-details">
+                            <strong>${item.name}</strong>
+                            <small>${item.weightLabel} - ₹${item.price}</small>
+                        </div>
+                        <div class="qty-controls" style="width: 80px; height: 32px;">
+                            <button onclick="changeCartQty('${item.name}', '${item.weightLabel}', -1)">-</button>
+                            <span>${item.qty}</span>
+                            <button onclick="changeCartQty('${item.name}', '${item.weightLabel}', 1)">+</button>
+                        </div>
                     </div>
                 `;
             });
 
             cartTotal.innerText = total;
+
+            // Refresh all product cards so their - 1 + buttons stay synced with cart changes
+            globalProducts.forEach((_, index) => {
+                if (document.getElementById(`weight-${index}`)) {
+                    updateCardActionUI(index);
+                }
+            });
         }
 
         function checkoutWhatsApp() {
@@ -132,17 +221,16 @@
                 return;
             }
 
-            let message = "Hello! I would like to order:\n\n";
+            let message = "Hello Sasreya Foods! I would like to order:\n\n";
             let total = 0;
 
             cart.forEach(item => {
-                message += `- ${item.name} (x${item.qty}): ₹${item.price * item.qty}\n`;
+                message += `▪ ${item.name} (${item.weightLabel}) x${item.qty} = ₹${item.price * item.qty}\n`;
                 total += item.price * item.qty;
             });
 
             message += `\n*Total Amount: ₹${total}*\n\nPlease let me know how to pay and provide delivery details.`;
 
-            // Encode the message for a URL and open WhatsApp
             const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
             window.open(whatsappUrl, '_blank');
         }
