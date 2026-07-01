@@ -11,8 +11,15 @@
         
         /* --- Sidebar Navigation --- */
         .sidebar { width: 250px; background: #fff; padding: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; z-index: 10; }
-        .sidebar h2 { color: #2ecc71; margin-top: 0; margin-bottom: 5px; font-size: 1.5em; text-align: center;}
-        .sidebar p { text-align: center; color: #777; font-size: 0.85em; margin-bottom: 30px; }
+        
+        /* --- BRANDING (Logo & Title) --- */
+        .sidebar-header { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 5px; }
+        .brand-logo { width: 45px; height: 45px; border-radius: 8px; object-fit: cover; }
+        
+        /* Change the color of 'Sasreya Foods' here */
+        .brand-name { color: #e67e22; margin: 0; font-size: 1.5em; text-align: left; } 
+        
+        .sidebar p { text-align: center; color: #777; font-size: 0.85em; margin-bottom: 30px; margin-top: 5px; }
         
         .nav-links { display: flex; flex-direction: column; gap: 10px; }
         .nav-btn { background: transparent; color: #555; border: none; padding: 12px 15px; border-radius: 8px; font-size: 1.1em; cursor: pointer; text-align: left; font-weight: bold; transition: 0.2s; display: flex; justify-content: space-between; align-items: center;}
@@ -72,36 +79,16 @@
         }
 
         /* --- Loading Animation --- */
-        .loader-container {
-            grid-column: 1 / -1; /* Centers across the whole grid */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 50px 0;
-            color: #777;
-        }
-        .spinner {
-            width: 45px;
-            height: 45px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #2ecc71;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        .loader-container { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px 0; color: #777; }
+        .spinner { width: 45px; height: 45px; border: 4px solid #f3f3f3; border-top: 4px solid #2ecc71; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* --- Mobile Responsiveness --- */
         @media (max-width: 768px) {
             body { flex-direction: column; overflow: auto;}
             .sidebar { width: 100%; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-            .sidebar h2 { margin: 0; font-size: 1.3em; text-align: left;}
+            .sidebar-header { justify-content: flex-start; margin-bottom: 5px; }
             .sidebar p { display: none; }
-            .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
             .nav-links { flex-direction: row; gap: 10px; }
             .nav-btn { flex: 1; padding: 10px; font-size: 1em; justify-content: center; gap: 8px;}
             .main-content { padding: 15px; overflow-y: visible; }
@@ -111,11 +98,13 @@
 </head>
 <body>
 
-    <!-- Sidebar Navigation -->
     <div class="sidebar">
+        
         <div class="sidebar-header">
-            <h2>Sasreya Foods</h2>
+            <img src="https://placehold.co/100x100/e67e22/white?text=SF" alt="Sasreya Logo" class="brand-logo">
+            <h2 class="brand-name">Sasreya Foods</h2>
         </div>
+        
         <p>Homemade Pickles & Snacks</p>
         <div class="nav-links">
             <button class="nav-btn active" id="nav-products" onclick="switchTab('products')">
@@ -127,13 +116,10 @@
         </div>
     </div>
 
-    <!-- Main Content Area -->
     <div class="main-content">
         
-        <!-- Products View -->
         <div id="products-tab" class="view active">
             <div class="products" id="product-list">
-                <!-- Loading Animation Structure -->
                 <div class="loader-container">
                     <div class="spinner"></div>
                     <p>Loading fresh items from the kitchen...</p>
@@ -141,7 +127,6 @@
             </div>
         </div>
 
-        <!-- Cart View -->
         <div id="cart-tab" class="view">
             <div class="cart-container">
                 <h2 style="margin-top: 0; color: #333;">Your Shopping Cart</h2>
@@ -157,7 +142,6 @@
 
     </div>
 
-    <!-- Fixed Floating Button -->
     <button class="floating-cart" id="floating-cart" onclick="switchTab('cart')">
         🛒 <span class="floating-badge" id="floating-badge">0</span>
     </button>
@@ -171,7 +155,6 @@
         let cart = [];
         let globalProducts = []; 
 
-        // Load Products
         Papa.parse(SHEET_CSV_URL, {
             download: true,
             header: true,
@@ -181,7 +164,6 @@
             }
         });
 
-        // Tab Switching Logic
         function switchTab(tabId) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById(tabId + '-tab').classList.add('active');
@@ -205,13 +187,14 @@
                     <p style="font-size: 0.85em; color: #777; margin-bottom: 10px; height: 34px; overflow: hidden;">${product.description}</p>
                     
                     <select id="weight-${index}" class="weight-select" onchange="updateCardActionUI(${index})">
-                        <option value="0.25">¼ kg</option>
-                        <option value="0.5">½ kg</option>
-                        <option value="1" selected>1 kg</option>
+                        <option value="" disabled selected>-- choose quantity --</option>
+                        <option value="0.25">250 g</option>
+                        <option value="0.5">500 g</option>
+                        <option value="1">1 kg</option>
                         <option value="2">2 kg</option>
                     </select>
                     
-                    <div class="price" id="price-${index}">₹${product.price}</div>
+                    <div class="price" id="price-${index}">₹${product.price} / kg</div>
                     <div id="action-${index}"></div>
                 `;
                 productList.appendChild(card);
@@ -219,18 +202,35 @@
             });
         }
 
+        // Alerts the user if they try to add to cart without picking a size
+        function promptSelection(index) {
+            alert("Please choose a quantity first!");
+            document.getElementById(`weight-${index}`).focus();
+        }
+
         function updateCardActionUI(index) {
             const select = document.getElementById(`weight-${index}`);
+            const actionContainer = document.getElementById(`action-${index}`);
+            const priceContainer = document.getElementById(`price-${index}`);
+            const product = globalProducts[index];
+            
+            // Handle state where no size is selected yet
+            if (select.value === "") {
+                priceContainer.innerText = `₹${product.price} / kg`; 
+                actionContainer.innerHTML = `
+                    <button class="action-btn" onclick="promptSelection(${index})">Add to Cart</button>
+                `;
+                return; 
+            }
+
+            // Normal math if a size is selected
             const weightLabel = select.options[select.selectedIndex].text;
             const weightMultiplier = parseFloat(select.value);
-            
-            const product = globalProducts[index];
             const basePrice = parseFloat(product.price);
             const currentPrice = Math.round(basePrice * weightMultiplier);
             
-            document.getElementById(`price-${index}`).innerText = `₹${currentPrice}`;
+            priceContainer.innerText = `₹${currentPrice}`;
             const cartItem = cart.find(i => i.name === product.name && i.weightLabel === weightLabel);
-            const actionContainer = document.getElementById(`action-${index}`);
 
             if (cartItem) {
                 actionContainer.innerHTML = `
