@@ -341,13 +341,14 @@
             });
         }
 
-        function checkoutWhatsApp() {
+		function checkoutWhatsApp() {
             if (cart.length === 0) {
                 alert("Please add items to your cart first!");
                 switchTab('products'); 
                 return;
             }
 
+            // 1. Build the order message
             let message = "Hello Sasreya Foods! I would like to order:\n\n";
             let total = 0;
 
@@ -358,8 +359,43 @@
 
             message += `\n*Total Amount: ₹${total}*\n\nPlease let me know how to pay and provide delivery details.`;
 
+            // ==========================================
+            // 2. THE GOOGLE FORM AUTOMATION 
+            // ==========================================
+            
+            const FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfC6pjkbK86p4Yen5-X5t8Aga7N0DmUxoCJSpkbxgM1qeAFuQ/formResponse';
+            
+            const ENTRY_ID = 'entry.1325426780';
+
+            // Package the data for submission
+            const formData = new URLSearchParams();
+            formData.append(ENTRY_ID, message);
+
+            // Send the data silently in the background
+            fetch(FORM_URL, {
+                method: 'POST',
+                mode: 'no-cors', // This is the magic word that bypasses security blocks
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: formData.toString()
+            }).then(() => {
+                console.log("Order silently saved to spreadsheet.");
+            }).catch((error) => {
+                console.error("Form submission failed, but WhatsApp will still open.", error);
+            });
+
+            // ==========================================
+            // 3. OPEN WHATSAPP & CLEAR CART
+            // ==========================================
+
             const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
             window.open(whatsappUrl, '_blank');
+
+            // Optional: Clear the cart after they checkout
+            cart = [];
+            updateCartUI();
+            switchTab('products');
         }
     </script>
 </body>
