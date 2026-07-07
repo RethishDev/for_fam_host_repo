@@ -393,7 +393,7 @@
             const phoneRegex = /^(?:91|0)?[6-9]\d{9}$/; 
             
             if (!phoneRegex.test(cleanPhone)) {
-                alert("Please enter a valid 10-digit mobile number.");
+                alert("Please enter a valid mobile number.");
                 document.getElementById('cust-phone').focus();
                 return; // Stop the checkout process
             }	
