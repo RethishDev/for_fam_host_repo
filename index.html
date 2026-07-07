@@ -12,28 +12,9 @@
         /* --- Sidebar Navigation --- */
         .sidebar { width: 250px; background: #fff; padding: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; z-index: 10; }
         
-        /* --- BRANDING (Logo & Title) --- */
         .sidebar-header { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 5px; }
-        .dev-btn {margin-left: auto;}
-		
-        .brand-logo { 
-            width: 45px; 
-            height: 45px; 
-            border-radius: 8px; 
-            object-fit: cover; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.15); /* Adds a premium subtle shadow */
-            border: 1px solid #eaeaea; /* Crisp edge */
-        }
-        
-        /* Professional Deep Slate color, bolder text, and tighter spacing */
-        .brand-name { 
-            color: #2c3e50; 
-            margin: 0; 
-            font-size: 1.5em; 
-            text-align: left; 
-            font-weight: 800; 
-            letter-spacing: -0.5px; 
-        }
+        .brand-logo { width: 45px; height: 45px; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.15); border: 1px solid #eaeaea; }
+        .brand-name { color: #2c3e50; margin: 0; font-size: 1.5em; text-align: left; font-weight: 800; letter-spacing: -0.5px; } 
         
         .sidebar p { text-align: center; color: #777; font-size: 0.85em; margin-bottom: 30px; margin-top: 5px; }
         
@@ -75,36 +56,43 @@
 
         /* --- Floating Cart Button --- */
         .floating-cart {
-            position: fixed; bottom: 25px; right: 25px;
-            width: 65px; height: 65px;
-            background: #2ecc71; color: white;
-            border-radius: 50%; display: none; 
-            align-items: center; justify-content: center;
-            font-size: 28px; cursor: pointer;
-            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4); border: none; z-index: 1000;
-            transition: transform 0.2s;
+            position: fixed; bottom: 25px; right: 25px; width: 65px; height: 65px; background: #2ecc71; color: white; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4); border: none; z-index: 1000; transition: transform 0.2s;
         }
         .floating-cart:hover { transform: scale(1.05); }
-        .floating-badge {
-            position: absolute; top: -2px; right: -2px;
-            background: #e74c3c; color: white;
-            border-radius: 50%; width: 24px; height: 24px; 
-            font-size: 12px; font-weight: bold;
-            display: flex; align-items: center; justify-content: center;
-            border: 2px solid white;
-        }
+        .floating-badge { position: absolute; top: -2px; right: -2px; background: #e74c3c; color: white; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
 
-        /* --- Loading Animation --- */
         .loader-container { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px 0; color: #777; }
         .spinner { width: 45px; height: 45px; border: 4px solid #f3f3f3; border-top: 4px solid #2ecc71; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --- NEW: Checkout Modal (Mobile Friendly) --- */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; padding: 15px; }
+        .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: slideUp 0.3s; }
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .modal-content h3 { margin-top: 0; color: #2c3e50; font-size: 1.4em; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;}
+        .input-group { margin-bottom: 15px; }
+        .input-group input[type="text"], .input-group input[type="tel"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1em; font-family: inherit; outline: none; transition: 0.2s;}
+        .input-group input:focus { border-color: #2ecc71; }
+        
+        /* The Wizzmoni Checkbox Area */
+        .radio-group { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; background: #f0fdf4; padding: 12px; border-radius: 8px; border: 1px solid #2ecc71; cursor: pointer;}
+        .radio-group label { cursor: pointer; font-weight: bold; color: #2c3e50; flex: 1;}
+        .radio-group input[type="checkbox"] { width: 20px; height: 20px; accent-color: #2ecc71; cursor: pointer; }
+
+        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .modal-actions button { flex: 1; padding: 12px; font-size: 1.1em; border-radius: 8px; cursor: pointer; font-weight: bold; border: none; transition: 0.2s;}
+        .cancel-btn { background: #f1f2f6; color: #555; }
+        .cancel-btn:hover { background: #e2e2e2; }
+        .confirm-btn { background: #25D366; color: white; }
+        .confirm-btn:hover { background: #20b858; }
 
         /* --- Mobile Responsiveness --- */
         @media (max-width: 768px) {
             body { flex-direction: column; overflow: auto;}
             .sidebar { width: 100%; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
             .sidebar-header { justify-content: flex-start; margin-bottom: 5px; }
-            .sidebar p { display: block; margin-top: 0; margin-bottom: 15px; text-align: left; }
+            .sidebar p { display: block; margin-top: 0; margin-bottom: 15px; text-align: left; } 
             .nav-links { flex-direction: row; gap: 10px; }
             .nav-btn { flex: 1; padding: 10px; font-size: 1em; justify-content: center; gap: 8px;}
             .main-content { padding: 15px; overflow-y: visible; }
@@ -114,30 +102,23 @@
 </head>
 <body>
 
+    <!-- Sidebar Navigation -->
     <div class="sidebar">
-        
         <div class="sidebar-header">
-            <img src="https://placehold.co/100x100/e67e22/white?text=SF" alt="Sasreya Logo" class="brand-logo">
+            <img src="https://placehold.co/100x100/2c3e50/white?text=SF" alt="Sasreya Logo" class="brand-logo">
             <h2 class="brand-name">Sasreya Foods</h2>
-			<button class="dev-btn"
-            onclick="window.location.href='https://rethishdev.github.io/Main-remote/'">
-				👨‍💻
-			</button>
         </div>
-        
-        <p>Homemade Pickles & Snacks (Quality Assured ⭐⭐⭐)</p>
+        <p>Homemade Pickles & Snacks</p>
         <div class="nav-links">
-            <button class="nav-btn active" id="nav-products" onclick="switchTab('products')">
-                🛍️ Products
-            </button>
-            <button class="nav-btn" id="nav-cart" onclick="switchTab('cart')">
-                🛒 Cart <span class="nav-badge" id="nav-cart-badge">0</span>
-            </button>
+            <button class="nav-btn active" id="nav-products" onclick="switchTab('products')">🛍️ Products</button>
+            <button class="nav-btn" id="nav-cart" onclick="switchTab('cart')">🛒 Cart <span class="nav-badge" id="nav-cart-badge">0</span></button>
         </div>
     </div>
 
+    <!-- Main Content Area -->
     <div class="main-content">
         
+        <!-- Products View -->
         <div id="products-tab" class="view active">
             <div class="products" id="product-list">
                 <div class="loader-container">
@@ -147,6 +128,7 @@
             </div>
         </div>
 
+        <!-- Cart View -->
         <div id="cart-tab" class="view">
             <div class="cart-container">
                 <h2 style="margin-top: 0; color: #333;">Your Shopping Cart</h2>
@@ -156,16 +138,49 @@
                 <h3 style="margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px;">
                     Total Amount: ₹<span id="cart-total">0</span>
                 </h3>
-                <button class="whatsapp-btn" onclick="checkoutWhatsApp()">Proceed to WhatsApp Checkout</button>
+                
+                <!-- Changed this button to open the modal instead of checking out immediately -->
+                <button class="whatsapp-btn" onclick="openCheckoutModal()">Proceed to Checkout</button>
             </div>
         </div>
-
     </div>
 
+    <!-- Fixed Floating Button -->
     <button class="floating-cart" id="floating-cart" onclick="switchTab('cart')">
         🛒 <span class="floating-badge" id="floating-badge">0</span>
     </button>
-	
+
+    <!-- NEW: The Checkout Details Modal -->
+    <div class="modal-overlay" id="checkout-modal">
+        <div class="modal-content">
+            <h3>Delivery Details</h3>
+            
+            <div class="input-group">
+                <input type="text" id="cust-name" placeholder="Your Name" required>
+            </div>
+            
+            <div class="input-group">
+                <input type="tel" id="cust-phone" placeholder="Phone / WhatsApp Number" required>
+            </div>
+            
+            <!-- The Wizzmoni Toggle -->
+            <label class="radio-group">
+                <input type="checkbox" id="is-wizzmoni" onchange="togglePlaceInput()">
+                <span>I am from Wizzmoni</span>
+            </label>
+            
+            <!-- Place Input (Will hide if Wizzmoni is checked) -->
+            <div class="input-group" id="place-container">
+                <input type="text" id="cust-place" placeholder="Your Location / Place" required>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="cancel-btn" onclick="closeCheckoutModal()">Cancel</button>
+                <button class="confirm-btn" onclick="submitOrder()">Send Order</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- 1. CONFIGURATION ---
         const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQkdpMJkEjlGqWVQmKUy9GZk_tabKkAxxgDrW5SGpe2r3vL-uoWOInuvhomxTdsrihJEhqfKvAQHFAK/pub?output=csv'; 
@@ -190,7 +205,6 @@
             
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('nav-' + tabId).classList.add('active');
-
             window.scrollTo(0, 0); 
         }
 
@@ -222,7 +236,6 @@
             });
         }
 
-        // Alerts the user if they try to add to cart without picking a size
         function promptSelection(index) {
             alert("Please choose a quantity first!");
             document.getElementById(`weight-${index}`).focus();
@@ -234,16 +247,12 @@
             const priceContainer = document.getElementById(`price-${index}`);
             const product = globalProducts[index];
             
-            // Handle state where no size is selected yet
             if (select.value === "") {
                 priceContainer.innerText = `₹${product.price} / kg`; 
-                actionContainer.innerHTML = `
-                    <button class="action-btn" onclick="promptSelection(${index})">Add to Cart</button>
-                `;
+                actionContainer.innerHTML = `<button class="action-btn" onclick="promptSelection(${index})">Add to Cart</button>`;
                 return; 
             }
 
-            // Normal math if a size is selected
             const weightLabel = select.options[select.selectedIndex].text;
             const weightMultiplier = parseFloat(select.value);
             const basePrice = parseFloat(product.price);
@@ -261,9 +270,7 @@
                     </div>
                 `;
             } else {
-                actionContainer.innerHTML = `
-                    <button class="action-btn" onclick="addToCart(${index}, ${currentPrice})">Add to Cart</button>
-                `;
+                actionContainer.innerHTML = `<button class="action-btn" onclick="addToCart(${index}, ${currentPrice})">Add to Cart</button>`;
             }
         }
 
@@ -341,59 +348,89 @@
             });
         }
 
-		function checkoutWhatsApp() {
+        // --- NEW: MODAL LOGIC & FORM SUBMISSION ---
+
+        function openCheckoutModal() {
             if (cart.length === 0) {
                 alert("Please add items to your cart first!");
                 switchTab('products'); 
                 return;
             }
+            document.getElementById('checkout-modal').style.display = 'flex';
+        }
 
-            // 1. Build the order message
-            let message = "Hello Sasreya Foods! I would like to order:\n\n";
+        function closeCheckoutModal() {
+            document.getElementById('checkout-modal').style.display = 'none';
+        }
+
+        // Logic for the Wizzmoni toggle checkbox
+        function togglePlaceInput() {
+            const isWizzmoni = document.getElementById('is-wizzmoni').checked;
+            const placeContainer = document.getElementById('place-container');
+            const placeInput = document.getElementById('cust-place');
+            
+            if (isWizzmoni) {
+                placeContainer.style.display = 'none';
+                placeInput.value = 'Wizzmoni'; // Set automatically behind the scenes
+            } else {
+                placeContainer.style.display = 'block';
+                placeInput.value = ''; // Clear it out
+            }
+        }
+
+        function submitOrder() {
+            const name = document.getElementById('cust-name').value.trim();
+            const phone = document.getElementById('cust-phone').value.trim();
+            const place = document.getElementById('cust-place').value.trim();
+
+            if (!name || !phone || !place) {
+                alert("Please fill in all details before sending the order.");
+                return;
+            }
+
+            // Build the final message (includes Name, Phone, and Place!)
+            let message = `*New Order from: ${name}*\n`;
+            message += `📞 Phone: ${phone}\n`;
+            message += `📍 Place: ${place}\n`;
+            message += `---------------------------\n`;
+            
             let total = 0;
-
             cart.forEach(item => {
                 message += `▪ ${item.name} (${item.weightLabel}) x${item.qty} = ₹${item.price * item.qty}\n`;
                 total += item.price * item.qty;
             });
 
-            message += `\n*Total Amount: ₹${total}*\n\nPlease let me know how to pay and provide delivery details.`;
+            message += `\n*Total Amount: ₹${total}*\n`;
 
-            // ==========================================
-            // 2. THE GOOGLE FORM AUTOMATION 
-            // ==========================================
-            
+            // Google Form Auto-Save (Your correct IDs are here!)
             const FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfC6pjkbK86p4Yen5-X5t8Aga7N0DmUxoCJSpkbxgM1qeAFuQ/formResponse';
-            
             const ENTRY_ID = 'entry.1325426780';
 
-            // Package the data for submission
             const formData = new URLSearchParams();
             formData.append(ENTRY_ID, message);
 
-            // Send the data silently in the background
             fetch(FORM_URL, {
                 method: 'POST',
-                mode: 'no-cors', // This is the magic word that bypasses security blocks
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
+                mode: 'no-cors', 
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: formData.toString()
             }).then(() => {
-                console.log("Order silently saved to spreadsheet.");
-            }).catch((error) => {
-                console.error("Form submission failed, but WhatsApp will still open.", error);
-            });
+                console.log("Order saved.");
+            }).catch((error) => console.error("Error saving.", error));
 
-            // ==========================================
-            // 3. OPEN WHATSAPP & CLEAR CART
-            // ==========================================
-
+            // Open WhatsApp
             const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
             window.open(whatsappUrl, '_blank');
 
-            // Optional: Clear the cart after they checkout
+            // Reset Everything
             cart = [];
+            document.getElementById('cust-name').value = '';
+            document.getElementById('cust-phone').value = '';
+            document.getElementById('cust-place').value = '';
+            document.getElementById('is-wizzmoni').checked = false;
+            togglePlaceInput(); // Reset UI
+            
+            closeCheckoutModal();
             updateCartUI();
             switchTab('products');
         }
