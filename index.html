@@ -388,20 +388,34 @@
                 return;
             }
 
+	    const cleanPhone = phone.replace(/[\s\-\+]/g, ''); 
+            // Checks for standard 10-digit Indian mobile number (optionally starting with 91 or 0)
+            const phoneRegex = /^(?:91|0)?[6-9]\d{9}$/; 
+            
+            if (!phoneRegex.test(cleanPhone)) {
+                alert("Please enter a valid 10-digit mobile number.");
+                document.getElementById('cust-phone').focus();
+                return; // Stop the checkout process
+            }	
+
             // Build the final message (includes Name, Phone, and Place!)
-            let message = `*New Order from: ${name}*\n`;
-            message += `📞 Phone: ${phone}\n`;
-            message += `📍 Place: ${place}\n`;
+            let message = `Hello *Sasreya Foods*! 👋\nI would like to place an order. Here are my details:\n\n`;
+            message += `👤 *Name:* ${name}\n`;
+            message += `📞 *Phone:* ${phone}\n`;
+            message += `📍 *Place:* ${place}\n`;
             message += `-------------------------------------\n`;
+            message += `*My Order Items:*\n`;
             
             let total = 0;
             cart.forEach(item => {
-                message += `▪ ${item.name} (${item.weightLabel}) x${item.qty} = ₹${item.price * item.qty}\n`;
+                message += `▪ ${item.qty} x ${item.name} [Size: ${item.weightLabel}] = ₹${item.price * item.qty}\n`;
                 total += item.price * item.qty;
             });
 
             message += `\n*Total Amount: ₹${total}*\n`;
-	    message += `\n*©️ sasreya.netlify.app*\n`;
+	    
+	    const currentYear = new Date().getFullYear();
+            message += `\n*© ${currentYear} sasreya.netlify.app*\n`;
 
             // Google Form Auto-Save (Your correct IDs are here!)
             const FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfC6pjkbK86p4Yen5-X5t8Aga7N0DmUxoCJSpkbxgM1qeAFuQ/formResponse';
