@@ -105,7 +105,7 @@
     <!-- Sidebar Navigation -->
     <div class="sidebar">
         <div class="sidebar-header">
-            <img src="https://placehold.co/100x100/2c3e50/white?text=SF" alt="Sasreya Logo" class="brand-logo">
+            <img src="https://placehold.co/100x100/e67e22/white?text=SF" alt="Sasreya Logo" class="brand-logo">
             <h2 class="brand-name">Sasreya Foods</h2>
         </div>
         <p>Homemade Pickles & Snacks</p>
@@ -392,7 +392,7 @@
             let message = `*New Order from: ${name}*\n`;
             message += `📞 Phone: ${phone}\n`;
             message += `📍 Place: ${place}\n`;
-            message += `---------------------------\n`;
+            message += `-------------------------------------\n`;
             
             let total = 0;
             cart.forEach(item => {
@@ -401,6 +401,7 @@
             });
 
             message += `\n*Total Amount: ₹${total}*\n`;
+	    message += `\n*©️ sasreya.netlify.app*\n`;
 
             // Google Form Auto-Save (Your correct IDs are here!)
             const FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfC6pjkbK86p4Yen5-X5t8Aga7N0DmUxoCJSpkbxgM1qeAFuQ/formResponse';
