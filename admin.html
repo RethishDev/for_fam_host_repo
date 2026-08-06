@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sasreya Admin - Settlement</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f0f2f5; padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        
+        h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0;}
+        
+        /* Order List */
+        .order-list { margin-bottom: 20px; max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #fafafa;}
+        .order-row { display: flex; align-items: flex-start; gap: 15px; padding: 15px; border-bottom: 1px solid #eee; background: white; margin-bottom: 10px; border-radius: 6px; cursor: pointer; transition: 0.2s;}
+        .order-row:hover { background: #f0fdf4; }
+        .order-row input[type="checkbox"] { width: 20px; height: 20px; accent-color: #2ecc71; margin-top: 3px; cursor: pointer;}
+        
+        .order-details { flex: 1; }
+        .order-details strong { display: block; font-size: 1.1em; color: #2c3e50; }
+        .order-details small { color: #777; }
+        .order-price { font-size: 1.2em; font-weight: bold; color: #2ecc71; }
+
+        /* Calculator Section */
+        .calculator { background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #e9ecef; }
+        .calc-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 1.1em; }
+        
+        .commission-input { padding: 8px; width: 120px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; text-align: right; }
+        .total-pay { font-size: 1.4em; font-weight: bold; color: #e74c3c; border-top: 2px dashed #ccc; padding-top: 15px; margin-top: 10px; }
+        
+        button { background: #25D366; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1em; margin-top: 20px; transition: 0.2s; }
+        button:hover { background: #20b858; }
+        
+        .loader { text-align: center; color: #777; padding: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Sasreya Settlement Calculator</h1>
+        <p style="color: #666; margin-bottom: 20px;">Select the orders you want to pay the seller for.</p>
+
+        <div class="order-list" id="order-list">
+            <div class="loader">Fetching latest orders...</div>
+        </div>
+
+        <div class="calculator">
+            <div class="calc-row">
+                <span>Customer Total Paid:</span>
+                <strong>₹<span id="cust-total">0</span></strong>
+            </div>
+            
+            <div class="calc-row">
+                <span>My Additional Charge (Margin):</span>
+                <div>
+                    ₹ <input type="number" id="my-commission" class="commission-input" value="0" min="0" oninput="calculateTotal()">
+                </div>
+            </div>
+
+            <div class="calc-row total-pay">
+                <span>Final Amount to Send Seller:</span>
+                <span>₹<span id="seller-total">0</span></span>
+            </div>
+        </div>
+
+        <button onclick="sendReceiptToSeller()">Send Receipt via WhatsApp ✅</button>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const RESPONSES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRMoaZvcXqrD0KWIEHEOdCFjHUMNu9NMUkhJxOoir9fDwMNJtO55Lkp1C4vWAgXlVbJ8v1BIz7CtiuU/pub?output=csv'; 
+        const SELLER_WHATSAPP_NUMBER = '918590360735'; // The relative making the food
+
+        let parsedOrders = [];
+
+        // Fetch Orders from Google Sheets
+        Papa.parse(RESPONSES_CSV_URL, {
+            download: true,
+            header: true,
+            complete: function(results) {
+                processOrders(results.data);
+            }
+        });
+
+        function processOrders(data) {
+            const listContainer = document.getElementById('order-list');
+            listContainer.innerHTML = ''; 
+            
+            // Reverse to show newest orders first
+            const validOrders = data.reverse().filter(row => row.Timestamp && row['Order Data']);
+
+            if (validOrders.length === 0) {
+                listContainer.innerHTML = '<p>No orders found yet.</p>';
+                return;
+            }
+
+            validOrders.forEach((row, index) => {
+                const rawText = row['Order Data'];
+                
+                // Smart Extraction: Uses Regex to pull the Name and Total from the WhatsApp message text
+                const nameMatch = rawText.match(/\*Name:\* (.*?)\n/);
+                const totalMatch = rawText.match(/\*Total Amount: ₹(\d+)\*/);
+                
+                // If it can't find them, default to Unknown
+                const customerName = nameMatch ? nameMatch[1] : 'Unknown Customer';
+                const orderTotal = totalMatch ? parseInt(totalMatch[1]) : 0;
+                
+                // Store the processed data
+                parsedOrders.push({
+                    id: index,
+                    date: row.Timestamp.split(' ')[0], // Just the date part
+                    name: customerName,
+                    total: orderTotal,
+                    rawText: rawText
+                });
+
+                // Create the UI row
+                const div = document.createElement('div');
+                div.className = 'order-row';
+                div.innerHTML = `
+                    <input type="checkbox" id="order-${index}" value="${index}" onchange="calculateTotal()">
+                    <div class="order-details" onclick="document.getElementById('order-${index}').click()">
+                        <strong>${customerName}</strong>
+                        <small>${row.Timestamp}</small>
+                    </div>
+                    <div class="order-price">₹${orderTotal}</div>
+                `;
+                listContainer.appendChild(div);
+            });
+        }
+
+        function calculateTotal() {
+            let customerTotal = 0;
+            
+            // Loop through checkboxes to find which are selected
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+            checkboxes.forEach(box => {
+                const orderIndex = box.value;
+                customerTotal += parsedOrders[orderIndex].total;
+            });
+
+            const myCommission = parseInt(document.getElementById('my-commission').value) || 0;
+            const sellerTotal = customerTotal - myCommission;
+
+            document.getElementById('cust-total').innerText = customerTotal;
+            // Prevent negative numbers if commission is accidentally typed too high
+            document.getElementById('seller-total').innerText = sellerTotal > 0 ? sellerTotal : 0; 
+        }
+
+        function sendReceiptToSeller() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+            
+            if (checkboxes.length === 0) {
+                alert("Please select at least one order to settle.");
+                return;
+            }
+
+            let customerTotal = parseInt(document.getElementById('cust-total').innerText);
+            let myCommission = parseInt(document.getElementById('my-commission').value) || 0;
+            let sellerTotal = parseInt(document.getElementById('seller-total').innerText);
+
+            // Build the Receipt Message
+            let msg = `Payment Processed ✅\n\n`;
+            msg += `*Settled Orders:*\n`;
+            
+            checkboxes.forEach((box, i) => {
+                const order = parsedOrders[box.value];
+                msg += `${i + 1}. ${order.name} - ₹${order.total} (${order.date})\n`;
+            });
+
+            msg += `\n----------------------\n`;
+            msg += `Total Value: ₹${customerTotal}\n`;
+            if (myCommission > 0) {
+                msg += `Delivery/Extra Charge: -₹${myCommission}\n`;
+            }
+            msg += `----------------------\n`;
+            msg += `*Amount Sent to You: ₹${sellerTotal}*\n\n`;
+            msg += `_Please find the payment screenshot attached below._`;
+
+            // Open WhatsApp
+            const whatsappUrl = `https://wa.me/${SELLER_WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+    </script>
+</body>
+</html>
