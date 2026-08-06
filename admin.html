@@ -87,29 +87,38 @@
             const listContainer = document.getElementById('order-list');
             listContainer.innerHTML = ''; 
             
-            // Reverse to show newest orders first
-            const validOrders = data.reverse().filter(row => row.Timestamp && row['Order Data']);
+            // 1. Filter out empty rows without relying on specific header names
+            const validOrders = data.reverse().filter(row => {
+                // This checks if the row has any text in it at all
+                return Object.values(row).join('').trim().length > 0;
+            });
 
             if (validOrders.length === 0) {
-                listContainer.innerHTML = '<p>No orders found yet.</p>';
+                listContainer.innerHTML = '<p>No orders found yet. (If you just placed an order, wait 2-3 minutes and refresh, Google takes a moment to update the public link!)</p>';
                 return;
             }
 
             validOrders.forEach((row, index) => {
-                const rawText = row['Order Data'];
-                
-                // Smart Extraction: Uses Regex to pull the Name and Total from the WhatsApp message text
-                const nameMatch = rawText.match(/\*Name:\* (.*?)\n/);
+                // 2. FOOLPROOF COLUMN GRABBING (Ignores header names completely)
+                const keys = Object.keys(row);
+                const timestampVal = row[keys[0]]; // Always grabs Column A (Date/Time)
+                const rawText = row[keys[1]];      // Always grabs Column B (Order Data)
+
+                if (!rawText) return; // Skip if this specific row is blank
+
+                // 3. ROBUST TEXT EXTRACTION
+                // Safely looks for the Name and Total regardless of spacing or line breaks
+                const nameMatch = rawText.match(/\*Name:\* (.*?)(?:\r?\n|$)/);
                 const totalMatch = rawText.match(/\*Total Amount: ₹(\d+)\*/);
                 
-                // If it can't find them, default to Unknown
-                const customerName = nameMatch ? nameMatch[1] : 'Unknown Customer';
+                const customerName = nameMatch ? nameMatch[1].trim() : 'Unknown Customer';
                 const orderTotal = totalMatch ? parseInt(totalMatch[1]) : 0;
+                const shortDate = timestampVal ? timestampVal.split(' ')[0] : 'Unknown Date';
                 
                 // Store the processed data
                 parsedOrders.push({
                     id: index,
-                    date: row.Timestamp.split(' ')[0], // Just the date part
+                    date: shortDate,
                     name: customerName,
                     total: orderTotal,
                     rawText: rawText
@@ -122,7 +131,7 @@
                     <input type="checkbox" id="order-${index}" value="${index}" onchange="calculateTotal()">
                     <div class="order-details" onclick="document.getElementById('order-${index}').click()">
                         <strong>${customerName}</strong>
-                        <small>${row.Timestamp}</small>
+                        <small>${timestampVal}</small>
                     </div>
                     <div class="order-price">₹${orderTotal}</div>
                 `;
