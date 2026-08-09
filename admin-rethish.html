@@ -245,11 +245,13 @@
                 sellerTotal += (data.totalWeightKg * sellerRates[name]);
             }
 
-            const myCommission = customerTotal - sellerTotal;
+            // FIX: Round the seller total FIRST, then subtract from the customer total
+            const roundedSellerTotal = Math.round(sellerTotal);
+            const myCommission = customerTotal - roundedSellerTotal;
 
             document.getElementById('cust-total').innerText = customerTotal;
-            document.getElementById('seller-total').innerText = Math.round(sellerTotal);
-            document.getElementById('my-commission').innerText = Math.round(myCommission);
+            document.getElementById('seller-total').innerText = roundedSellerTotal;
+            document.getElementById('my-commission').innerText = myCommission;
         }
 
         // Sends the highly detailed, professional receipt to the seller
