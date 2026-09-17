@@ -36,6 +36,10 @@
         .search-input { width: 100%; padding: 14px 20px; border-radius: 30px; border: 1px solid #ddd; outline: none; font-size: 1.05em; font-family: inherit; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.2s; }
         .search-input:focus { border-color: #2ecc71; box-shadow: 0 4px 12px rgba(46, 204, 113, 0.2); }
 
+        /* --- NEW: Live Announcement Banner --- */
+        .announcement-banner { background: linear-gradient(135deg, #f1c40f, #f39c12); color: #2c3e50; padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; font-weight: 600; font-size: 0.95em; box-shadow: 0 4px 10px rgba(243, 156, 18, 0.2); display: none; animation: slideDown 0.4s ease-out; border-left: 4px solid #e67e22; line-height: 1.4;}
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
         /* --- Zepto-Style Products Grid --- */
         .products { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } 
         
@@ -172,7 +176,7 @@
             </svg>
             <h2 class="brand-name">Sasreya Foods</h2>
         </div>
-        <p>Complete homemade Pickles & Chips</p>
+        <p>Complete homemade Pickles & Chips 💯</p>
         <div class="nav-links">
             <button class="nav-btn active" id="nav-products" onclick="switchTab('products')">🛍️ Products</button>
             <button class="nav-btn" id="nav-cart" onclick="switchTab('cart')">🛒 Cart <span class="nav-badge" id="nav-cart-badge">0</span></button>
@@ -184,6 +188,9 @@
     <div class="main-content">
         <!-- Products View -->
         <div id="products-tab" class="view active">
+
+            <!-- NEW: Live Announcement Banner (Hidden by default) -->
+            <div id="announcement-banner" class="announcement-banner"></div>
             
             <div class="search-container">
                 <input type="text" id="search-input" class="search-input" placeholder="🔍 Search for Pickles, Chips, Powders..." onkeyup="filterProducts()">
@@ -234,7 +241,7 @@
                 </div>
                 
                 <select id="modal-weight" class="modal-weight-select" onchange="updateModalUI()">
-                    <option value="" disabled selected>-- Choose Size --</option>
+                    <option value="" disabled selected>--Choose Size--</option>
                     <option value="0.25">250 g</option>
                     <option value="0.5">500 g</option>
                     <option value="1">1 kg</option>
@@ -306,19 +313,40 @@
             download: true,
             header: true,
             complete: function(results) {
-                // Automatically attach English words to Malayalam titles so search works smoothly
-                globalProducts = results.data.filter(p => p.name).map(p => {
+                let announcementMessage = null;
+
+                // Process the data
+                globalProducts = results.data.filter(p => {
+                    // THE GHOST ROW LOGIC
+                    if (p.name === 'ANNOUNCEMENT') {
+                        // If the description has text, save it as our message
+                        if (p.description && p.description.trim() !== '') {
+                            announcementMessage = p.description;
+                        }
+                        return false; // Remove this row so it doesn't show up as a product card!
+                    }
+                    return p.name; // Keep all other normal products
+                }).map(p => {
+                    // (Your existing Malayalam Dictionary Magic)
                     let searchString = (p.name + " " + p.description).toLowerCase();
-                    
                     for (const [mal, eng] of Object.entries(malayalamDict)) {
                         if (p.name.includes(mal) || p.description.includes(mal)) {
                             searchString += " " + eng;
                         }
                     }
-                    
                     p.hiddenSearchText = searchString;
                     return p;
                 }); 
+                
+                // Show or Hide the Banner
+                const banner = document.getElementById('announcement-banner');
+                if (announcementMessage) {
+                    banner.innerHTML = `📢 ${announcementMessage}`;
+                    banner.style.display = 'block';
+                } else {
+                    banner.style.display = 'none';
+                }
+
                 displayProducts();
             }
         });
@@ -379,6 +407,9 @@
                 card.className = 'product-card';
                 card.onclick = () => openProductModal(index);
                 
+                // Calculate the 250g starting price
+                const startingPrice = Math.round(parseFloat(product.price) * 0.25);
+                
                 card.innerHTML = `
                     <div class="image-container">
                         <img src="${product.image}" alt="${product.name}">
@@ -395,7 +426,7 @@
                             <option value="1">1 kg</option>
                             <option value="2">2 kg</option>
                         </select>
-                        <div class="price" id="price-${index}">₹${product.price}/kg</div>
+                        <div class="price" id="price-${index}"><span style="font-size: 0.75em; color: #777; font-weight: normal;">Starts at </span>₹${startingPrice}</div>
                     </div>
                 `;
                 productList.appendChild(card);
@@ -415,7 +446,8 @@
             const product = globalProducts[index];
             
             if (select.value === "") {
-                priceContainer.innerText = `₹${product.price}/kg`; 
+                const startingPrice = Math.round(parseFloat(product.price) * 0.25);
+                priceContainer.innerHTML = `<span style="font-size: 0.75em; color: #777; font-weight: normal;">Starts at </span>₹${startingPrice}`; 
                 actionContainer.innerHTML = `<button class="add-plus-btn" onclick="event.stopPropagation(); promptSelection(${index})">+</button>`;
                 return; 
             }
@@ -477,7 +509,8 @@
             document.getElementById(`weight-${index}`).value = select.value;
             
             if (select.value === "") {
-                priceContainer.innerText = `₹${product.price} / kg`;
+                const startingPrice = Math.round(parseFloat(product.price) * 0.25);
+                priceContainer.innerHTML = `<span style="font-size: 0.6em; color: #777; font-weight: normal;">Starts at </span>₹${startingPrice}`;
                 actionContainer.innerHTML = `<button class="big-add-btn" onclick="showToast('Please choose a size first! 👆')">Add Item</button>`;
                 updateCardActionUI(index); 
                 return;
