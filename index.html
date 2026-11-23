@@ -2,39 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="google-site-verification" content="1rf0MfFt3pFI0PpaVcU-mFFgvPJqErQ0E7n6oFSrDSk" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sasreya Foods | Online Ordering & WhatsApp Checkout</title>
-
-    <!-- Search Engine Optimization (SEO) -->
-    <meta name="description" content="Complete Homemade pickels and chips, Authentic, tradional style and tasty. Taste and quality: Our ultimate milestone. Browse our selection, calculate dynamic weight-based pricing, and complete your order seamlessly via WhatsApp." />
-    <meta name="keywords" content="Sasreya Foods, online ordering, WhatsApp checkout, dynamic pricing, food delivery, custom web application" />
-    <meta name="author" content="Rethish Kumar P A" />
-    <meta name="robots" content="index, follow" />
-
-    <!-- Open Graph / Social Media Preview (For WhatsApp & Social Sharing) -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Sasreya Foods | Order Online" />
-    <meta property="og:description" content="Quickly select items and checkout directly through WhatsApp. Custom ordering platform developed by Rethish Kumar P A." />
-    <meta property="og:site_name" content="Sasreya Foods" />
-
-    <!-- Structured Data (JSON-LD) -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "Sasreya Foods Ordering Platform",
-      "applicationCategory": "BusinessApplication",
-      "description": "A custom web application for Sasreya Foods featuring dynamic weight-based pricing, order retrieval tables, and automated WhatsApp checkout.",
-      "author": {
-        "@type": "Person",
-        "name": "Rethish Kumar P A",
-        "jobTitle": "Java Software Engineer",
-        "url": "https://rethish.netlify.app/"
-      }
-    }
-    </script>
-    
+    <title>Sasreya Foods</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         * { box-sizing: border-box; }
@@ -42,19 +11,22 @@
         
         /* --- Sidebar Navigation --- */
         .sidebar { width: 250px; background: #fff; padding: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; z-index: 10; }
-        .sidebar-header { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 5px; }
-        
-        /* --- FIX: Restored Logo Size --- */
-        .brand-logo { width: 50px; height: 50px; border-radius: 12px; flex-shrink: 0; }
-        
-        .brand-name { color: #2c3e50; margin: 0; font-size: 1.5em; text-align: left; font-weight: 800; letter-spacing: -0.5px; } 
-        .sidebar p { text-align: center; color: #777; font-size: 0.85em; margin-bottom: 30px; margin-top: 5px; }
+        .sidebar-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 5px; }
+        .brand-group { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .brand-logo { width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0; }
+        .brand-name { color: #2c3e50; margin: 0; font-size: 1.35em; text-align: left; font-weight: 800; letter-spacing: -0.5px; line-height: 1.1; } 
+        .sidebar p { text-align: left; color: #777; font-size: 0.85em; margin-bottom: 20px; margin-top: 4px; }
+
+        /* Top-Right Compact Share Button */
+        .share-top-btn { background: #f1f2f6; color: #2c3e50; border: 1px solid #e0e0e0; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: 0.2s; }
+        .share-top-btn:hover { background: #2ecc71; color: white; border-color: #2ecc71; }
+        .share-top-btn svg { width: 18px; height: 18px; fill: currentColor; }
         
         .nav-links { display: flex; flex-direction: column; gap: 10px; }
-        .nav-btn { background: transparent; color: #555; border: none; padding: 12px 15px; border-radius: 8px; font-size: 1.1em; cursor: pointer; text-align: left; font-weight: bold; transition: 0.2s; display: flex; justify-content: space-between; align-items: center;}
+        .nav-btn { background: transparent; color: #555; border: none; padding: 12px 15px; border-radius: 8px; font-size: 1.05em; cursor: pointer; text-align: left; font-weight: bold; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; white-space: nowrap; }
         .nav-btn:hover { background: #f0fdf4; color: #2ecc71; }
         .nav-btn.active { background: #2ecc71; color: white; }
-        .nav-badge { background: #e74c3c; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; display: none; }
+        .nav-badge { background: #e74c3c; color: white; padding: 2px 7px; border-radius: 12px; font-size: 0.78em; display: none; }
 
         /* --- Main Content Area --- */
         .main-content { flex: 1; padding: 30px; overflow-y: auto; }
@@ -62,119 +34,155 @@
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* --- NEW: Live Search Bar --- */
-        .search-container { margin-bottom: 20px; }
-        .search-input { width: 100%; padding: 14px 20px; border-radius: 30px; border: 1px solid #ddd; outline: none; font-size: 1.05em; font-family: inherit; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.2s; }
+        /* --- Live Announcement Banner with Typing Cursor --- */
+        .announcement-banner { background: linear-gradient(135deg, #f1c40f, #f39c12); color: #2c3e50; padding: 12px 18px; border-radius: 12px; margin-bottom: 16px; font-weight: 600; font-size: 0.92em; box-shadow: 0 4px 10px rgba(243, 156, 18, 0.2); display: none; animation: slideDown 0.4s ease-out; border-left: 4px solid #e67e22; line-height: 1.4; min-height: 46px; }
+        .typing-cursor { display: inline-block; margin-left: 2px; font-weight: 900; color: #2c3e50; animation: blinkCursor 0.8s step-end infinite; }
+        @keyframes blinkCursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- Live Search Bar --- */
+        .search-container { margin-bottom: 18px; }
+        .search-input { width: 100%; padding: 13px 18px; border-radius: 30px; border: 1px solid #ddd; outline: none; font-size: 1em; font-family: inherit; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.2s; }
         .search-input:focus { border-color: #2ecc71; box-shadow: 0 4px 12px rgba(46, 204, 113, 0.2); }
 
-        /* --- NEW: Live Announcement Banner --- */
-        .announcement-banner { background: linear-gradient(135deg, #f1c40f, #f39c12); color: #2c3e50; padding: 9px 17px; border-radius: 12px; margin-bottom: 20px; font-weight: 600; font-size: 0.95em; box-shadow: 0 4px 10px rgba(243, 156, 18, 0.2); display: none; animation: slideDown 0.4s ease-out; border-left: 4px solid #e67e22; line-height: 1.4;}
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* --- Products Grid --- */
+        /* --- Zepto-Style Products Grid --- */
         .products { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } 
-        
         @media (min-width: 768px) {
             .products { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
         }
 
-        .product-card { background: white; padding: 10px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); position: relative; display: flex; flex-direction: column; cursor: pointer;}
+        .product-card { background: white; padding: 10px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); position: relative; display: flex; flex-direction: column; cursor: pointer; }
+        
+        /* Out of Stock Styling */
+        .product-card.out-of-stock .image-container img { filter: grayscale(90%); opacity: 0.6; }
+        .product-card.out-of-stock .product-title,
+        .product-card.out-of-stock .price { color: #999; }
+        .oos-badge { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(44, 62, 80, 0.88); color: #fff; padding: 5px 10px; border-radius: 6px; font-size: 0.72em; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; z-index: 4; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
+        .weight-select:disabled { background: #f2f2f2; color: #999; cursor: not-allowed; }
         
         /* Image & Floating Button Container */
         .image-container { position: relative; margin-bottom: 15px; }
-        .product-card img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; display: block; background: #f9f9f9;}
+        .product-card img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; display: block; background: #f9f9f9; }
         .action-container { position: absolute; bottom: -12px; right: 8px; z-index: 5; }
         
         /* Small Floating Controls */
-        .add-plus-btn { width: 34px; height: 34px; background: white; color: #e74c3c; border: 1.5px solid #e74c3c; border-radius: 50%; font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.15); line-height: 0; padding-bottom: 2px; transition: 0.1s;}
+        .add-plus-btn { width: 34px; height: 34px; background: white; color: #e74c3c; border: 1.5px solid #e74c3c; border-radius: 50%; font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.15); line-height: 0; padding-bottom: 2px; transition: 0.1s; }
         .add-plus-btn:hover { background: #e74c3c; color: white; }
-        .tiny-qty { background: #e74c3c; color: white; border-radius: 20px; display: flex; align-items: center; justify-content: space-between; width: 75px; height: 32px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); overflow: hidden; border: 1.5px solid #e74c3c;}
-        .tiny-qty button { background: transparent; border: none; color: white; font-weight: bold; width: 25px; cursor: pointer; font-size: 1.2em; display: flex; align-items: center; justify-content: center;}
+        .tiny-qty { background: #e74c3c; color: white; border-radius: 20px; display: flex; align-items: center; justify-content: space-between; width: 75px; height: 32px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); overflow: hidden; border: 1.5px solid #e74c3c; }
+        .tiny-qty button { background: transparent; border: none; color: white; font-weight: bold; width: 25px; cursor: pointer; font-size: 1.2em; display: flex; align-items: center; justify-content: center; }
         .tiny-qty span { font-weight: bold; font-size: 0.9em; }
 
         /* Typography & Controls */
-        .product-title { font-size: 0.9em; margin: 0 0 3px 0; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: bold;}
-        .product-desc { font-size: 0.75em; color: #777; margin: 0 0 8px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3;}
+        .product-title { font-size: 0.9em; margin: 0 0 3px 0; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: bold; }
+        .product-desc { font-size: 0.75em; color: #777; margin: 0 0 8px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
         .bottom-card-row { display: flex; flex-direction: column; gap: 5px; margin-top: auto; }
-        .weight-select { width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #ddd; font-size: 0.8em; outline: none; background: #fdfdfd;}
+        .weight-select { width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #ddd; font-size: 0.8em; outline: none; background: #fdfdfd; }
         .price { font-size: 0.95em; font-weight: bold; color: #333; margin: 0; }
         
         /* --- Product Details Modal (Bottom Sheet on Mobile) --- */
         .product-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; align-items: flex-end; justify-content: center; }
-        .product-modal-content { background: white; border-radius: 20px 20px 0 0; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s; position: relative; padding-bottom: 20px;}
+        .product-modal-content { background: white; border-radius: 20px 20px 0 0; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s; position: relative; padding-bottom: 20px; }
         
         @media (min-width: 768px) { 
             .product-modal-overlay { align-items: center; padding: 20px; }
-            .product-modal-content { border-radius: 15px; padding-bottom: 0;}
+            .product-modal-content { border-radius: 15px; padding-bottom: 0; }
         }
 
         .product-modal-img-container { position: relative; }
-        .product-modal-img-container img { width: 100%; height: 280px; object-fit: cover; }
-        .close-modal-btn { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 18px; cursor: pointer; color: #333; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; font-weight: bold;}
+        .product-modal-img-container img { width: 100%; height: 260px; object-fit: cover; display: block; }
+        .close-modal-btn { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 18px; cursor: pointer; color: #333; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; font-weight: bold; }
         
         .product-modal-body { padding: 20px; }
-        .product-modal-title { margin-top: 0; color: #2c3e50; font-size: 1.4em; margin-bottom: 5px;}
-        .product-modal-desc { color: #666; line-height: 1.5; font-size: 0.95em; margin-bottom: 20px;}
-        .product-modal-price { font-size: 1.4em; font-weight: bold; color: #333; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;}
+        .product-modal-title { margin-top: 0; color: #2c3e50; font-size: 1.35em; margin-bottom: 5px; }
+        .product-modal-desc { color: #666; line-height: 1.5; font-size: 0.95em; margin-bottom: 20px; }
+        .product-modal-price { font-size: 1.35em; font-weight: bold; color: #333; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; }
         
-        .modal-weight-select { width: 100%; padding: 12px; font-size: 1.1em; margin-bottom: 20px; border-radius: 8px; border: 1px solid #ccc;}
-        .big-add-btn { background: #e74c3c; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.2em; transition: 0.2s;}
+        .modal-weight-select { width: 100%; padding: 12px; font-size: 1.05em; margin-bottom: 20px; border-radius: 8px; border: 1px solid #ccc; }
+        .big-add-btn { background: #e74c3c; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.15em; transition: 0.2s; }
+        .big-add-btn.oos-btn { background: #bdc3c7; color: #555; cursor: not-allowed; }
         
-        .modal-qty-controls { display: flex; align-items: center; justify-content: space-between; background: #fff; border: 2px solid #e74c3c; border-radius: 8px; height: 50px; overflow: hidden;}
-        .modal-qty-controls button { width: 30%; background: transparent; color: #e74c3c; font-size: 1.8em; border: none; cursor: pointer; height: 100%; font-weight: bold;}
-        .modal-qty-controls span { width: 40%; font-weight: bold; text-align: center; font-size: 1.2em; color: #e74c3c;}
+        .modal-qty-controls { display: flex; align-items: center; justify-content: space-between; background: #fff; border: 2px solid #e74c3c; border-radius: 8px; height: 50px; overflow: hidden; }
+        .modal-qty-controls button { width: 30%; background: transparent; color: #e74c3c; font-size: 1.8em; border: none; cursor: pointer; height: 100%; font-weight: bold; }
+        .modal-qty-controls span { width: 40%; font-weight: bold; text-align: center; font-size: 1.15em; color: #e74c3c; }
 
-        /* --- Cart & Checkout Modals --- */
-        .cart-container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); max-width: 600px; margin: 0 auto; }
-        .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        /* --- Cart View --- */
+        .cart-container { background: white; padding: 22px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); max-width: 600px; margin: 0 auto; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 15px; gap: 10px; }
         .cart-item-details { text-align: left; }
-        .cart-item-details small { color: #777; display: block; margin-top: 4px;}
-        
-        .cart-qty { border: 1px solid #ddd; background: #fff; border-radius: 6px; display: flex; align-items: center; width: 90px; height: 35px;}
-        .cart-qty button { width: 30px; background: none; border: none; font-size: 1.2em; cursor: pointer;}
-        .cart-qty span { flex: 1; text-align: center; font-weight: bold;}
+        .cart-item-details small { color: #777; display: block; margin-top: 4px; }
+        .cart-qty { border: 1px solid #ddd; background: #fff; border-radius: 6px; display: flex; align-items: center; width: 90px; height: 35px; flex-shrink: 0; }
+        .cart-qty button { width: 30px; background: none; border: none; font-size: 1.2em; cursor: pointer; }
+        .cart-qty span { flex: 1; text-align: center; font-weight: bold; }
+        .whatsapp-btn { background: #25D366; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1em; margin-top: 20px; }
 
-        .whatsapp-btn { background: #25D366; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1em; margin-top: 20px;}
-        
-        .floating-cart { position: fixed; bottom: 25px; right: 25px; width: 65px; height: 65px; background: #2ecc71; color: white; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4); border: none; z-index: 1001; transition: transform 0.2s;}
+        /* --- NEW: My Orders View (Mobile-First Cards) --- */
+        .orders-container { max-width: 600px; margin: 0 auto; }
+        .orders-search-card { background: white; padding: 18px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 16px; }
+        .orders-search-card h2 { margin: 0 0 6px 0; color: #2c3e50; font-size: 1.3em; }
+        .orders-search-card p { margin: 0 0 12px 0; color: #777; font-size: 0.85em; }
+        .phone-lookup-row { display: flex; gap: 8px; width: 100%; }
+        .phone-lookup-row input { flex: 1; min-width: 0; padding: 11px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95em; outline: none; }
+        .phone-lookup-row input:focus { border-color: #2ecc71; }
+        .phone-lookup-row button { background: #2ecc71; color: white; border: none; padding: 0 18px; border-radius: 8px; font-weight: bold; font-size: 0.95em; cursor: pointer; flex-shrink: 0; }
+        .phone-lookup-row button:hover { background: #27ae60; }
+
+        .order-history-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid #2ecc71; }
+        .order-card-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; border-bottom: 1px solid #f0f0f0; padding-bottom: 10px; margin-bottom: 10px; }
+        .order-date { font-size: 0.8em; color: #777; font-weight: 600; }
+        .order-total-pill { background: #eafaf1; color: #27ae60; font-weight: 800; font-size: 1em; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+        .order-items-list { list-style: none; padding: 0; margin: 0 0 10px 0; }
+        .order-items-list li { display: flex; justify-content: space-between; gap: 10px; font-size: 0.9em; color: #333; padding: 4px 0; border-bottom: 1px dashed #f3f3f3; }
+        .order-items-list li:last-child { border-bottom: none; }
+        .order-item-price { font-weight: 600; color: #555; white-space: nowrap; }
+        .order-card-footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.8em; color: #777; padding-top: 8px; border-top: 1px solid #f0f0f0; flex-wrap: wrap; }
+        .orders-status-msg { text-align: center; background: white; padding: 30px 18px; border-radius: 12px; color: #777; font-size: 0.95em; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .sync-note { text-align: center; font-size: 0.78em; color: #999; margin-top: 10px; }
+
+        /* --- Floating Cart & Loader --- */
+        .floating-cart { position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; background: #2ecc71; color: white; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 26px; cursor: pointer; box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4); border: none; z-index: 1001; transition: transform 0.2s; }
         .floating-badge { position: absolute; top: -2px; right: -2px; background: #e74c3c; color: white; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
 
         .loader-container { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px 0; color: #777; }
-        .spinner { width: 45px; height: 45px; border: 4px solid #f3f3f3; border-top: 4px solid #2ecc71; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        .spinner { width: 42px; height: 42px; border: 4px solid #f3f3f3; border-top: 4px solid #2ecc71; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 12px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* Checkout Modal */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; padding: 15px; }
         .modal-content { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: slideUp 0.3s; }
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         
-        .modal-content h3 { margin-top: 0; color: #2c3e50; font-size: 1.4em; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;}
+        .modal-content h3 { margin-top: 0; color: #2c3e50; font-size: 1.4em; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
         .input-group { margin-bottom: 15px; }
-        .input-group input[type="text"], .input-group input[type="tel"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1em; font-family: inherit; outline: none;}
-        .radio-group { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; background: #f0fdf4; padding: 12px; border-radius: 8px; border: 1px solid #2ecc71; cursor: pointer;}
+        .input-group input[type="text"], .input-group input[type="tel"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1em; font-family: inherit; outline: none; }
+        .radio-group { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; background: #f0fdf4; padding: 12px; border-radius: 8px; border: 1px solid #2ecc71; cursor: pointer; }
         .radio-group input[type="checkbox"] { width: 20px; height: 20px; accent-color: #2ecc71; cursor: pointer; }
         
         .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
-        .modal-actions button { flex: 1; padding: 12px; font-size: 1.1em; border-radius: 8px; cursor: pointer; font-weight: bold; border: none; }
+        .modal-actions button { flex: 1; padding: 12px; font-size: 1.05em; border-radius: 8px; cursor: pointer; font-weight: bold; border: none; }
         .cancel-btn { background: #f1f2f6; color: #555; }
         .confirm-btn { background: #25D366; color: white; }
 
-        /* --- NEW: Toast Notification Styles --- */
-        .toast { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); background: #2c3e50; color: white; padding: 14px 24px; border-radius: 30px; font-weight: bold; z-index: 9999; box-shadow: 0 4px 15px rgba(0,0,0,0.2); text-align: center; width: max-content; max-width: 90%; transition: top 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); display: flex; align-items: center; gap: 10px; font-size: 0.95em;}
+        /* Toast Notification */
+        .toast { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); background: #2c3e50; color: white; padding: 12px 22px; border-radius: 30px; font-weight: bold; z-index: 9999; box-shadow: 0 4px 15px rgba(0,0,0,0.2); text-align: center; width: max-content; max-width: 90%; transition: top 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); display: flex; align-items: center; gap: 8px; font-size: 0.92em; }
         .toast.show { top: 20px; }
         
         /* --- Mobile Responsiveness --- */
         @media (max-width: 768px) {
             body { display: block; height: auto; overflow-x: hidden; overflow-y: auto; }
-            .sidebar { width: 100%; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; background: white;}
-            .sidebar-header { justify-content: flex-start; margin-bottom: 5px; }
-            .sidebar p { display: block; margin-top: 0; margin-bottom: 15px; text-align: left; } 
+            .sidebar { width: 100%; padding: 12px 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; background: white; }
+            .sidebar-header { margin-bottom: 2px; }
+            .sidebar p { margin-top: 2px; margin-bottom: 12px; font-size: 0.8em; } 
             
-            .nav-links { flex-direction: row; gap: 10px; flex-wrap: wrap; }
-            .nav-btn { flex: 1; min-width: 30%; padding: 9px; font-size: 0.95em; justify-content: center; gap: 6px;}
+            /* 3 clean equal tabs on one row */
+            .nav-links { flex-direction: row; gap: 6px; }
+            .nav-btn { flex: 1; padding: 9px 6px; font-size: 0.86em; justify-content: center; gap: 4px; background: #f4f6f8; }
+            .nav-btn.active { background: #2ecc71; color: white; }
             
-            .main-content { padding: 15px; overflow-y: visible; }
-            .cart-container { padding: 15px; }
-            .toast.show { top: 120px; } 
+            .main-content { padding: 12px; overflow-y: visible; }
+            .cart-container { padding: 16px; }
+            .orders-search-card { padding: 14px; }
+            .order-history-card { padding: 14px; }
+            .toast.show { top: 125px; } 
         }
     </style>
 </head>
@@ -183,35 +191,45 @@
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
-    <!-- Sidebar Navigation -->
+    <!-- Sidebar / Top Header Navigation -->
     <div class="sidebar">
         <div class="sidebar-header">
-            <!-- Animated SVG Logo -->
-            <svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="background: white; border: 2px solid #e74c3c; box-sizing: border-box;">
-                <style>
-                    .spin { animation: spin 10s linear infinite; transform-origin: 50px 50px; }
-                    .pulse { animation: pulse 2s ease-in-out infinite; transform-origin: 50px 50px; }
-                    @keyframes spin { 100% { transform: rotate(360deg); } }
-                    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
-                </style>
-                <g class="spin">
-                    <circle cx="50" cy="50" r="42" fill="#f1c40f" />
-                    <circle cx="50" cy="50" r="35" fill="none" stroke="#e67e22" stroke-width="4" stroke-dasharray="10 8" />
-                </g>
-                <g class="pulse">
-                    <circle cx="50" cy="50" r="26" fill="#ffffff" stroke="#e74c3c" stroke-width="3" />
-                    <text x="50" y="59" font-family="'Segoe UI', Tahoma, Arial, sans-serif" font-size="26" font-weight="900" fill="#e74c3c" text-anchor="middle" letter-spacing="-1">SF</text>
-                    <path d="M 68 32 Q 78 22 82 35 Q 72 45 68 32" fill="#2ecc71" stroke="#27ae60" stroke-width="1"/>
-                    <path d="M 32 68 Q 22 78 18 65 Q 28 55 32 68" fill="#e74c3c" stroke="#c0392b" stroke-width="1"/>
-                </g>
-            </svg>
-            <h2 class="brand-name">Sasreya Foods</h2>
+            <div class="brand-group">
+                <!-- Animated SVG Logo -->
+                <svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="background: white; border: 2px solid #e74c3c; box-sizing: border-box;">
+                    <style>
+                        .spin { animation: spin 10s linear infinite; transform-origin: 50px 50px; }
+                        .pulse { animation: pulse 2s ease-in-out infinite; transform-origin: 50px 50px; }
+                        @keyframes spin { 100% { transform: rotate(360deg); } }
+                        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+                    </style>
+                    <g class="spin">
+                        <circle cx="50" cy="50" r="42" fill="#f1c40f" />
+                        <circle cx="50" cy="50" r="35" fill="none" stroke="#e67e22" stroke-width="4" stroke-dasharray="10 8" />
+                    </g>
+                    <g class="pulse">
+                        <circle cx="50" cy="50" r="26" fill="#ffffff" stroke="#e74c3c" stroke-width="3" />
+                        <text x="50" y="59" font-family="'Segoe UI', Tahoma, Arial, sans-serif" font-size="26" font-weight="900" fill="#e74c3c" text-anchor="middle" letter-spacing="-1">SF</text>
+                        <path d="M 68 32 Q 78 22 82 35 Q 72 45 68 32" fill="#2ecc71" stroke="#27ae60" stroke-width="1"/>
+                        <path d="M 32 68 Q 22 78 18 65 Q 28 55 32 68" fill="#e74c3c" stroke="#c0392b" stroke-width="1"/>
+                    </g>
+                </svg>
+                <h2 class="brand-name">Sasreya Foods</h2>
+            </div>
+
+            <!-- Moved Share Button to Top Right -->
+            <button class="share-top-btn" onclick="shareShop()" title="Share Shop" aria-label="Share Shop">
+                <svg viewBox="0 0 24 24">
+                    <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
+                </svg>
+            </button>
         </div>
-        <p>Complete homemade Pickles & Chips 💯</p>
+        <p>Homemade Pickles & Snacks</p>
         <div class="nav-links">
             <button class="nav-btn active" id="nav-products" onclick="switchTab('products')">🛍️ Products</button>
             <button class="nav-btn" id="nav-cart" onclick="switchTab('cart')">🛒 Cart <span class="nav-badge" id="nav-cart-badge">0</span></button>
-            <button class="nav-btn" onclick="shareShop()" style="background: #f1f2f6; color: #2c3e50;">📤 Share</button>
+            <!-- Replaced Share with My Orders -->
+            <button class="nav-btn" id="nav-orders" onclick="switchTab('orders')">📦 My Orders</button>
         </div>
     </div>
 
@@ -219,10 +237,8 @@
     <div class="main-content">
         <!-- Products View -->
         <div id="products-tab" class="view active">
-
-            <!-- NEW: Live Announcement Banner (Hidden by default) -->
             <div id="announcement-banner" class="announcement-banner"></div>
-            
+
             <div class="search-container">
                 <input type="text" id="search-input" class="search-input" placeholder="🔍 Search for Pickles, Chips, Powders..." onkeyup="filterProducts()">
             </div>
@@ -246,6 +262,25 @@
                     Total Amount: ₹<span id="cart-total">0</span>
                 </h3>
                 <button class="whatsapp-btn" onclick="openCheckoutModal()">Proceed to Checkout</button>
+            </div>
+        </div>
+
+        <!-- NEW: My Orders View -->
+        <div id="orders-tab" class="view">
+            <div class="orders-container">
+                <div class="orders-search-card">
+                    <h2>📦 My Orders</h2>
+                    <p>Enter your mobile number to view your past orders.</p>
+                    <div class="phone-lookup-row">
+                        <input type="tel" id="orders-phone-input" placeholder="10-digit mobile number">
+                        <button onclick="fetchMyOrders()">Find</button>
+                    </div>
+                </div>
+
+                <div id="my-orders-list">
+                    <div class="orders-status-msg">Enter your mobile number above to check your order history.</div>
+                </div>
+                <div class="sync-note">Just placed an order? It may take 2–3 minutes to appear here.</div>
             </div>
         </div>
     </div>
@@ -272,15 +307,13 @@
                 </div>
                 
                 <select id="modal-weight" class="modal-weight-select" onchange="updateModalUI()">
-                    <option value="" disabled selected>--Choose Size--</option>
-                    <option value="0.25">250 g</option>
+                    <option value="0.25" selected>250 g</option>
                     <option value="0.5">500 g</option>
                     <option value="1">1 kg</option>
                     <option value="2">2 kg</option>
                 </select>
                 
-                <div id="modal-action-container">
-                </div>
+                <div id="modal-action-container"></div>
             </div>
         </div>
     </div>
@@ -312,7 +345,8 @@
     <script>
         // --- 1. CONFIGURATION ---
         const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQkdpMJkEjlGqWVQmKUy9GZk_tabKkAxxgDrW5SGpe2r3vL-uoWOInuvhomxTdsrihJEhqfKvAQHFAK/pub?output=csv'; 
-        const WHATSAPP_NUMBER = '919446195202'; 
+        const RESPONSES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRMoaZvcXqrD0KWIEHEOdCFjHUMNu9NMUkhJxOoir9fDwMNJtO55Lkp1C4vWAgXlVbJ8v1BIz7CtiuU/pub?output=csv';
+        const WHATSAPP_NUMBER = '918590360735'; 
 
         // --- 2. APP LOGIC ---
         let cart = [];
@@ -320,45 +354,104 @@
         let currentModalProductIndex = null;
         let toastTimeout; 
 
-        // --- FIX: The Magic Malayalam Dictionary ---
         const malayalamDict = {
             "മാങ്ങ": "mango manga",
-            "അച്ചാർ": "pickle achar achaar",
+            "അച്ചാർ": "pickle achar",
             "ചമ്മന്തി": "chammanthi chutney",
             "പൊടി": "podi powder",
             "ചക്ക": "chakka jackfruit",
             "ഉപ്പേരി": "upperi chips",
             "കപ്പ": "kappa tapioca cassava",
             "മീൻ": "meen fish",
-            "മീനച്ചാർ": "meen fish pickle achar achaar",
             "ബീഫ്": "beef erachi",
             "ചുക്ക്": "chukku ginger dry",
-            "കാപ്പി": "kappi coffee kaappi",
-            "ഏത്തക്ക": "ethakka banana kaya kaaya",
-            "വറുത്തത്": "upperi chips fry",
-            "ശർക്കരപ്പരട്ടി": "sharkkaraperatti",
-            "കളിയടക്ക": "kaliyadakka kaliyodakka kadukadakka cheeda"
+            "കാപ്പി": "kappi coffee"
         };
 
-        Papa.parse(SHEET_CSV_URL, {
+        // Helper: Check if product is marked out of stock in Google Sheet ("stock" column)
+        function isOutOfStock(product) {
+            const val = (product.stock || product.status || '').toString().trim().toLowerCase();
+            return ['out', 'out of stock', 'no', '0', 'false', 'unavailable'].includes(val);
+        }
+
+        let announcementTimer = null;
+
+        // Splits text safely so emojis and Malayalam characters don't break while typing
+        function splitGraphemes(str) {
+            if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+                const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
+                return Array.from(segmenter.segment(str), s => s.segment);
+            }
+            return Array.from(str);
+        }
+
+        function startAnnouncementTyping(messages) {
+            const banner = document.getElementById('announcement-banner');
+            if (!messages.length) {
+                banner.style.display = 'none';
+                return;
+            }
+
+            banner.style.display = 'block';
+            banner.innerHTML = `📢 <span id="announcement-text"></span><span class="typing-cursor">|</span>`;
+            const textEl = document.getElementById('announcement-text');
+
+            clearTimeout(announcementTimer);
+            let msgIndex = 0;
+            let charIndex = 0;
+            let isDeleting = false;
+            let currentChars = splitGraphemes(messages[0]);
+
+            function tick() {
+                if (!isDeleting) {
+                    charIndex++;
+                    textEl.textContent = currentChars.slice(0, charIndex).join('');
+
+                    if (charIndex === currentChars.length) {
+                        // If only 1 announcement exists, stop after typing it out
+                        if (messages.length === 1) return;
+                        isDeleting = true;
+                        announcementTimer = setTimeout(tick, 2500); // Pause to read
+                        return;
+                    }
+                    announcementTimer = setTimeout(tick, 45); // Typing speed
+                } else {
+                    charIndex--;
+                    textEl.textContent = currentChars.slice(0, charIndex).join('');
+
+                    if (charIndex === 0) {
+                        isDeleting = false;
+                        msgIndex = (msgIndex + 1) % messages.length; // Next in order
+                        currentChars = splitGraphemes(messages[msgIndex]);
+                        announcementTimer = setTimeout(tick, 350); // Pause before next
+                        return;
+                    }
+                    announcementTimer = setTimeout(tick, 22); // Erasing speed
+                }
+            }
+
+            tick();
+        }
+
+        Papa.parse(SHEET_CSV_URL + '&t=' + Date.now(), {
             download: true,
             header: true,
             complete: function(results) {
-                let announcementMessage = null;
+                const announcementMessages = [];
 
-                // Process the data
                 globalProducts = results.data.filter(p => {
-                    // THE GHOST ROW LOGIC
-                    if (p.name === 'ANNOUNCEMENT') {
-                        // If the description has text, save it as our message
+                    if (p.name && p.name.trim().toUpperCase() === 'ANNOUNCEMENT') {
                         if (p.description && p.description.trim() !== '') {
-                            announcementMessage = p.description;
+                            // Supports multiple messages separated by "|" OR multiple ANNOUNCEMENT rows
+                            p.description.split('|').forEach(part => {
+                                const cleaned = part.trim();
+                                if (cleaned) announcementMessages.push(cleaned);
+                            });
                         }
-                        return false; // Remove this row so it doesn't show up as a product card!
+                        return false;
                     }
-                    return p.name; // Keep all other normal products
+                    return p.name;
                 }).map(p => {
-                    // (Your existing Malayalam Dictionary Magic)
                     let searchString = (p.name + " " + p.description).toLowerCase();
                     for (const [mal, eng] of Object.entries(malayalamDict)) {
                         if (p.name.includes(mal) || p.description.includes(mal)) {
@@ -366,18 +459,11 @@
                         }
                     }
                     p.hiddenSearchText = searchString;
+                    p.outOfStock = isOutOfStock(p);
                     return p;
                 }); 
-                
-                // Show or Hide the Banner
-                const banner = document.getElementById('announcement-banner');
-                if (announcementMessage) {
-                    banner.innerHTML = `📢 ${announcementMessage}`;
-                    banner.style.display = 'block';
-                } else {
-                    banner.style.display = 'none';
-                }
 
+                startAnnouncementTyping(announcementMessages);
                 displayProducts();
             }
         });
@@ -386,7 +472,6 @@
             const toast = document.getElementById('toast');
             toast.innerText = message;
             toast.classList.add('show');
-            
             clearTimeout(toastTimeout);
             toastTimeout = setTimeout(() => {
                 toast.classList.remove('show');
@@ -406,15 +491,12 @@
             }
         }
 
-        // --- FIX: Upgraded Multi-Word Smart Search ---
         function filterProducts() {
             const term = document.getElementById('search-input').value.toLowerCase().trim();
-            // Splits the search into multiple words (e.g. "mango" and "pickle")
             const searchWords = term.split(' ').filter(w => w !== ''); 
             const cards = document.querySelectorAll('.product-card');
             
             globalProducts.forEach((product, index) => {
-                // Checks if EVERY word typed exists in the hidden search string
                 const match = searchWords.every(word => product.hiddenSearchText.includes(word));
                 cards[index].style.display = match ? 'flex' : 'none';
             });
@@ -427,6 +509,18 @@
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('nav-' + tabId).classList.add('active');
             window.scrollTo(0, 0); 
+
+            // Auto-fill and fetch orders if user switches to My Orders tab
+            if (tabId === 'orders') {
+                const savedPhone = localStorage.getItem('sasreya_phone');
+                const phoneInput = document.getElementById('orders-phone-input');
+                if (savedPhone && !phoneInput.value) {
+                    phoneInput.value = savedPhone;
+                    fetchMyOrders();
+                } else if (phoneInput.value.trim()) {
+                    fetchMyOrders();
+                }
+            }
         }
 
         function displayProducts() {
@@ -435,39 +529,33 @@
 
             globalProducts.forEach((product, index) => {
                 const card = document.createElement('div');
-                card.className = 'product-card';
+                card.className = 'product-card' + (product.outOfStock ? ' out-of-stock' : '');
                 card.onclick = () => openProductModal(index);
                 
-                // Calculate the 250g starting price
                 const startingPrice = Math.round(parseFloat(product.price) * 0.25);
                 
                 card.innerHTML = `
                     <div class="image-container">
                         <img src="${product.image}" alt="${product.name}">
+                        ${product.outOfStock ? '<span class="oos-badge">Out of Stock</span>' : ''}
                         <div id="action-${index}" class="action-container" onclick="event.stopPropagation()"></div>
                     </div>
                     <h3 class="product-title">${product.name}</h3>
                     <p class="product-desc">${product.description}</p>
                     
                     <div class="bottom-card-row" onclick="event.stopPropagation()">
-                        <select id="weight-${index}" class="weight-select" onchange="updateCardActionUI(${index})">
-                            <option value="" disabled selected>- size -</option>
-                            <option value="0.25">250 g</option>
+                        <select id="weight-${index}" class="weight-select" onchange="updateCardActionUI(${index})" ${product.outOfStock ? 'disabled' : ''}>
+                            <option value="0.25" selected>250 g</option>
                             <option value="0.5">500 g</option>
                             <option value="1">1 kg</option>
                             <option value="2">2 kg</option>
                         </select>
-                        <div class="price" id="price-${index}"><span style="font-size: 0.75em; color: #777; font-weight: normal;">Starts at </span>₹${startingPrice}</div>
+                        <div class="price" id="price-${index}">₹${startingPrice}</div>
                     </div>
                 `;
                 productList.appendChild(card);
                 updateCardActionUI(index); 
             });
-        }
-
-        function promptSelection(index) {
-            showToast("Please choose a size first! 👆");
-            document.getElementById(`weight-${index}`).focus();
         }
 
         function updateCardActionUI(index) {
@@ -476,18 +564,16 @@
             const priceContainer = document.getElementById(`price-${index}`);
             const product = globalProducts[index];
             
-            if (select.value === "") {
-                const startingPrice = Math.round(parseFloat(product.price) * 0.25);
-                priceContainer.innerHTML = `<span style="font-size: 0.75em; color: #777; font-weight: normal;">Starts at </span>₹${startingPrice}`; 
-                actionContainer.innerHTML = `<button class="add-plus-btn" onclick="event.stopPropagation(); promptSelection(${index})">+</button>`;
-                return; 
-            }
-
             const weightLabel = select.options[select.selectedIndex].text;
             const weightMultiplier = parseFloat(select.value);
             const currentPrice = Math.round(parseFloat(product.price) * weightMultiplier);
-            
             priceContainer.innerText = `₹${currentPrice}`;
+
+            if (product.outOfStock) {
+                actionContainer.innerHTML = '';
+                return;
+            }
+
             const cartItem = cart.find(i => i.name === product.name && i.weightLabel === weightLabel);
 
             if (cartItem) {
@@ -512,7 +598,9 @@
             document.getElementById('modal-desc').innerText = product.description;
             
             const cardSelect = document.getElementById(`weight-${index}`);
-            document.getElementById('modal-weight').value = cardSelect.value;
+            const modalSelect = document.getElementById('modal-weight');
+            modalSelect.value = cardSelect.value;
+            modalSelect.disabled = product.outOfStock;
             
             updateModalUI();
             document.getElementById('product-modal-overlay').style.display = 'flex';
@@ -538,20 +626,16 @@
             const actionContainer = document.getElementById('modal-action-container');
             
             document.getElementById(`weight-${index}`).value = select.value;
-            
-            if (select.value === "") {
-                const startingPrice = Math.round(parseFloat(product.price) * 0.25);
-                priceContainer.innerHTML = `<span style="font-size: 0.6em; color: #777; font-weight: normal;">Starts at </span>₹${startingPrice}`;
-                actionContainer.innerHTML = `<button class="big-add-btn" onclick="showToast('Please choose a size first! 👆')">Add Item</button>`;
-                updateCardActionUI(index); 
-                return;
-            }
 
             const weightLabel = select.options[select.selectedIndex].text;
             const weightMultiplier = parseFloat(select.value);
             const currentPrice = Math.round(parseFloat(product.price) * weightMultiplier);
-            
             priceContainer.innerText = `₹${currentPrice}`;
+
+            if (product.outOfStock) {
+                actionContainer.innerHTML = `<button class="big-add-btn oos-btn" disabled>Currently Out of Stock</button>`;
+                return;
+            }
             
             const cartItem = cart.find(i => i.name === product.name && i.weightLabel === weightLabel);
             
@@ -611,7 +695,7 @@
                     cartItemsContainer.innerHTML += `
                         <div class="cart-item">
                             <div class="cart-item-details">
-                                <strong style="font-size: 1.1em;">${item.name}</strong>
+                                <strong style="font-size: 1.05em;">${item.name}</strong>
                                 <small>${item.weightLabel} - ₹${item.price}</small>
                             </div>
                             <div class="cart-qty">
@@ -648,6 +732,100 @@
             }
         }
 
+        // --- NEW: My Orders Lookup Logic ---
+        function normalizePhone(phoneStr) {
+            const digits = (phoneStr || '').replace(/\D/g, '');
+            return digits.slice(-10); // Compare last 10 digits safely
+        }
+
+        function fetchMyOrders() {
+            const inputVal = document.getElementById('orders-phone-input').value.trim();
+            const targetPhone = normalizePhone(inputVal);
+            const listContainer = document.getElementById('my-orders-list');
+
+            if (targetPhone.length < 10) {
+                showToast("Please enter a valid 10-digit number 📱");
+                return;
+            }
+
+            // Save phone so it auto-loads next time
+            localStorage.setItem('sasreya_phone', inputVal);
+
+            listContainer.innerHTML = `
+                <div class="orders-status-msg">
+                    <div class="spinner" style="margin: 0 auto 10px auto;"></div>
+                    Fetching your orders...
+                </div>
+            `;
+
+            Papa.parse(RESPONSES_CSV_URL, {
+                download: true,
+                header: true,
+                complete: function(results) {
+                    const matchedOrders = [];
+
+                    for (let i = results.data.length - 1; i >= 0; i--) {
+                        const row = results.data[i];
+                        const keys = Object.keys(row);
+                        const timestamp = row[keys[0]];
+                        const rawText = row[keys[1]];
+                        if (!rawText) continue;
+
+                        const phoneMatch = rawText.match(/(?:📞 )?\*Phone:\* (.*?)(?:\r?\n|$)/);
+                        if (!phoneMatch) continue;
+
+                        if (normalizePhone(phoneMatch[1]) === targetPhone) {
+                            const placeMatch = rawText.match(/(?:📍 )?\*Place:\* (.*?)(?:\r?\n|$)/);
+                            const totalMatch = rawText.match(/\*Total Amount: ₹(\d+)\*/);
+                            
+                            const items = [];
+                            const itemRegex = /▪ (\d+) x (.*?) \[Size: (.*?)\] = ₹(\d+)/g;
+                            let m;
+                            while ((m = itemRegex.exec(rawText)) !== null) {
+                                items.push({ qty: m[1], name: m[2].trim(), size: m[3].trim(), price: m[4] });
+                            }
+
+                            matchedOrders.push({
+                                date: timestamp || 'Recent',
+                                place: placeMatch ? placeMatch[1].trim() : '-',
+                                total: totalMatch ? totalMatch[1] : '0',
+                                items: items
+                            });
+                        }
+                    }
+
+                    if (matchedOrders.length === 0) {
+                        listContainer.innerHTML = `<div class="orders-status-msg">No orders found for <strong>${inputVal}</strong>.</div>`;
+                        return;
+                    }
+
+                    listContainer.innerHTML = matchedOrders.map(order => `
+                        <div class="order-history-card">
+                            <div class="order-card-top">
+                                <span class="order-date">🗓️ ${order.date}</span>
+                                <span class="order-total-pill">₹${order.total}</span>
+                            </div>
+                            <ul class="order-items-list">
+                                ${order.items.map(it => `
+                                    <li>
+                                        <span>${it.qty} × ${it.name} <small style="color:#777;">(${it.size})</small></span>
+                                        <span class="order-item-price">₹${it.price}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                            <div class="order-card-footer">
+                                <span>📍 ${order.place}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                },
+                error: function() {
+                    listContainer.innerHTML = `<div class="orders-status-msg">Could not load orders right now. Please try again.</div>`;
+                }
+            });
+        }
+
+        // --- Checkout Modal & Form Submit ---
         function openCheckoutModal() {
             if (cart.length === 0) { 
                 showToast("Your cart is empty! 🛒"); 
