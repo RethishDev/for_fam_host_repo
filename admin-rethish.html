@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sasreya Admin - Settlement</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f0f2f5; padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        
+        h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0;}
+        
+        /* Order List */
+        .order-list { margin-bottom: 20px; max-height: 350px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #fafafa;}
+        .order-row { display: flex; align-items: flex-start; gap: 15px; padding: 15px; border-bottom: 1px solid #eee; background: white; margin-bottom: 10px; border-radius: 6px; cursor: pointer; transition: 0.2s;}
+        .order-row:hover { background: #f0fdf4; }
+        .order-row input[type="checkbox"] { width: 20px; height: 20px; accent-color: #2ecc71; margin-top: 3px; cursor: pointer;}
+        
+        .order-details { flex: 1; }
+        .order-details strong { display: block; font-size: 1.1em; color: #2c3e50; }
+        .order-details small { color: #777; }
+        .order-price { font-size: 1.2em; font-weight: bold; color: #2ecc71; }
+
+        /* Calculator Section */
+        .calculator { background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #e9ecef; }
+        
+        .item-breakdown-container { margin: 15px 0; padding: 15px; background: white; border-radius: 8px; border: 1px solid #ddd; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px dashed #eee; font-size: 0.95em;}
+        .item-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .item-row input { width: 80px; padding: 6px; border: 1px solid #ccc; border-radius: 5px; text-align: right; font-weight: bold;}
+        
+        .calc-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 1.1em; }
+        .margin-row { color: #2980b9; font-weight: bold; }
+        .total-pay { font-size: 1.4em; font-weight: bold; color: #e74c3c; border-top: 2px dashed #ccc; padding-top: 15px; margin-top: 10px; }
+        
+        button { background: #25D366; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1em; margin-top: 20px; transition: 0.2s; }
+        button:hover { background: #20b858; }
+        
+        .loader { text-align: center; color: #777; padding: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Sasreya Settlement Calculator</h1>
+        <p style="color: #666; margin-bottom: 20px;">Select orders to automatically calculate weights and margins.</p>
+
+        <div class="order-list" id="order-list">
+            <div class="loader">Fetching latest orders...</div>
+        </div>
+
+        <div class="calculator">
+            <div class="calc-row">
+                <span>Customer Total Paid:</span>
+                <strong>₹<span id="cust-total">0</span></strong>
+            </div>
+            
+            <!-- Smart Item Breakdown Goes Here -->
+            <div id="item-breakdown" class="item-breakdown-container">
+                <span style="color: #999; font-size: 0.9em;">Select an order above to see the item breakdown.</span>
+            </div>
+
+            <div class="calc-row margin-row">
+                <span>My Total Charge (Margin):</span>
+                <span>₹<span id="my-commission">0</span></span>
+            </div>
+
+            <div class="calc-row total-pay">
+                <span>Final Amount to Send Seller:</span>
+                <span>₹<span id="seller-total">0</span></span>
+            </div>
+        </div>
+
+        <button onclick="sendReceiptToSeller()">Send Receipt via WhatsApp ✅</button>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const RESPONSES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRMoaZvcXqrD0KWIEHEOdCFjHUMNu9NMUkhJxOoir9fDwMNJtO55Lkp1C4vWAgXlVbJ8v1BIz7CtiuU/pub?output=csv'; 
+        const SELLER_WHATSAPP_NUMBER = '919446195202'; 
+
+        let parsedOrders = [];
+        let currentAggregatedItems = {}; // Holds items from checked boxes
+        let sellerRates = {}; // Remembers the rates you type in so they don't reset
+
+        // Fetch Orders from Google Sheets
+        Papa.parse(RESPONSES_CSV_URL, {
+            download: true,
+            header: true,
+            complete: function(results) {
+                processOrders(results.data);
+            }
+        });
+
+        // Helper to turn "250 g" into 0.25 (kg)
+        function parseWeightToKg(sizeStr) {
+            const numMatch = sizeStr.match(/[\d.]+/);
+            if (!numMatch) return 1;
+            const num = parseFloat(numMatch[0]);
+            if (sizeStr.toLowerCase().includes('g') && !sizeStr.toLowerCase().includes('kg')) {
+                return num / 1000;
+            }
+            return num; // assume kg
+        }
+
+        function processOrders(data) {
+            const listContainer = document.getElementById('order-list');
+            listContainer.innerHTML = ''; 
+            
+            const validOrders = data.reverse().filter(row => Object.values(row).join('').trim().length > 0);
+
+            if (validOrders.length === 0) {
+                listContainer.innerHTML = '<p>No orders found yet.</p>';
+                return;
+            }
+
+            validOrders.forEach((row, index) => {
+                const keys = Object.keys(row);
+                const timestampVal = row[keys[0]]; 
+                const rawText = row[keys[1]];      
+
+                if (!rawText) return; 
+
+                // 1. Get Name and Total
+                const nameMatch = rawText.match(/\*Name:\* (.*?)(?:\r?\n|$)/);
+                const totalMatch = rawText.match(/\*Total Amount: ₹(\d+)\*/);
+                
+                const customerName = nameMatch ? nameMatch[1].trim() : 'Unknown Customer';
+                const orderTotal = totalMatch ? parseInt(totalMatch[1]) : 0;
+                const shortDate = timestampVal ? timestampVal.split(' ')[0] : 'Unknown Date';
+                
+                // 2. EXTRACTION MAGIC: Find all items in this order
+                const itemsList = [];
+                // Looks for: ▪ 1 x Beef pickle [Size: 250 g] = ₹500
+                const itemRegex = /▪ (\d+) x (.*?) \[Size: (.*?)\] = ₹(\d+)/g;
+                let match;
+                while ((match = itemRegex.exec(rawText)) !== null) {
+                    itemsList.push({
+                        qty: parseInt(match[1]),
+                        name: match[2].trim(),
+                        sizeLabel: match[3].trim(),
+                        weightInKg: parseWeightToKg(match[3].trim()),
+                        totalPaid: parseInt(match[4])
+                    });
+                }
+
+                // Store processed order
+                parsedOrders.push({
+                    id: index,
+                    date: shortDate,
+                    name: customerName,
+                    total: orderTotal,
+                    items: itemsList
+                });
+
+                // Create UI row
+                const div = document.createElement('div');
+                div.className = 'order-row';
+                div.innerHTML = `
+                    <input type="checkbox" id="order-${index}" value="${index}" onchange="handleCheckboxChange()">
+                    <div class="order-details" onclick="document.getElementById('order-${index}').click()">
+                        <strong>${customerName}</strong>
+                        <small>${timestampVal}</small>
+                    </div>
+                    <div class="order-price">₹${orderTotal}</div>
+                `;
+                listContainer.appendChild(div);
+            });
+        }
+
+        // Triggered whenever a box is checked or unchecked
+        function handleCheckboxChange() {
+            currentAggregatedItems = {}; // Reset
+
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+            checkboxes.forEach(box => {
+                const order = parsedOrders[box.value];
+                
+                // Group identical items together across multiple orders
+                order.items.forEach(item => {
+                    if (!currentAggregatedItems[item.name]) {
+                        currentAggregatedItems[item.name] = { totalWeightKg: 0, customerTotalPaid: 0 };
+                    }
+                    const totalItemWeight = item.qty * item.weightInKg;
+                    currentAggregatedItems[item.name].totalWeightKg += totalItemWeight;
+                    currentAggregatedItems[item.name].customerTotalPaid += item.totalPaid;
+                });
+            });
+
+            renderItemBreakdown();
+            updateTotals();
+        }
+
+        // Draws the Seller Rate inputs based on the items in the checked orders
+        function renderItemBreakdown() {
+            const container = document.getElementById('item-breakdown');
+            container.innerHTML = '';
+
+            if (Object.keys(currentAggregatedItems).length === 0) {
+                container.innerHTML = '<span style="color: #999; font-size: 0.9em;">Select an order above to see the item breakdown.</span>';
+                return;
+            }
+
+            for (const [name, data] of Object.entries(currentAggregatedItems)) {
+                // Figure out what the customer paid per kg, to use as the default seller rate
+                const defaultRatePerKg = Math.round(data.customerTotalPaid / data.totalWeightKg);
+                
+                // If we haven't typed a custom rate for this item yet, use the default
+                if (sellerRates[name] === undefined) {
+                    sellerRates[name] = defaultRatePerKg;
+                }
+
+                container.innerHTML += `
+                    <div class="item-row">
+                        <div>
+                            <strong>${name}</strong><br>
+                            <small style="color: #777;">Total Sold: ${data.totalWeightKg} kg</small>
+                        </div>
+                        <div style="text-align: right;">
+                            <small style="color: #777;">Seller Rate / kg:</small><br>
+                            ₹ <input type="number" 
+                                value="${sellerRates[name]}" 
+                                onchange="updateSellerRate('${name}', this.value)">
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Triggered when you type a new seller rate
+        function updateSellerRate(itemName, newRate) {
+            sellerRates[itemName] = parseFloat(newRate) || 0;
+            updateTotals();
+        }
+
+        // Calculates the final numbers based on the weights and the seller rates
+        function updateTotals() {
+            let customerTotal = 0;
+            let sellerTotal = 0;
+
+            // Calculate based on the items
+            for (const [name, data] of Object.entries(currentAggregatedItems)) {
+                customerTotal += data.customerTotalPaid;
+                sellerTotal += (data.totalWeightKg * sellerRates[name]);
+            }
+
+            // FIX: Round the seller total FIRST, then subtract from the customer total
+            const roundedSellerTotal = Math.round(sellerTotal);
+            const myCommission = customerTotal - roundedSellerTotal;
+
+            document.getElementById('cust-total').innerText = customerTotal;
+            document.getElementById('seller-total').innerText = roundedSellerTotal;
+            document.getElementById('my-commission').innerText = myCommission;
+        }
+
+        // Sends the highly detailed, professional receipt to the seller
+        function sendReceiptToSeller() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+            if (checkboxes.length === 0) {
+                alert("Please select at least one order to settle.");
+                return;
+            }
+
+            let customerTotal = parseInt(document.getElementById('cust-total').innerText);
+            let sellerTotal = parseInt(document.getElementById('seller-total').innerText);
+            let myCommission = parseInt(document.getElementById('my-commission').innerText);
+
+            let msg = `Payment Processed ✅\n\n`;
+            
+            msg += `*Settled Orders:*\n`;
+            checkboxes.forEach((box, i) => {
+                const order = parsedOrders[box.value];
+                msg += `${i + 1}. ${order.name} - ₹${order.total} (${order.date})\n`;
+            });
+
+            msg += `\n*Item Breakdown & Rates:*\n`;
+            for (const [name, data] of Object.entries(currentAggregatedItems)) {
+                const rate = sellerRates[name];
+                const lineTotal = Math.round(data.totalWeightKg * rate);
+                msg += `▪ ${name}: ${data.totalWeightKg}kg @ ₹${rate}/kg = ₹${lineTotal}\n`;
+            }
+
+            msg += `\n----------------------\n`;
+            msg += `Total Collected: ₹${customerTotal}\n`;
+            if (myCommission > 0) {
+                msg += `Platform/Admin Margin: -₹${myCommission}\n`;
+            }
+            msg += `----------------------\n`;
+            msg += `*Amount Sent to You: ₹${sellerTotal}*\n\n`;
+            msg += `_Please find the payment screenshot attached below._`;
+
+            const whatsappUrl = `https://wa.me/${SELLER_WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+    </script>
+</body>
+</html>

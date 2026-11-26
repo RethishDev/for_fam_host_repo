@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sasreya Admin - Edit Orders</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f0f2f5; padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0;}
+        
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #555;}
+        select, input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1em; }
+        
+        .item-list { border: 1px solid #ddd; border-radius: 8px; padding: 15px; background: #fafafa; margin-bottom: 20px; }
+        .item-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; background: white; padding: 10px; border-radius: 6px; border: 1px solid #eee; }
+        .item-row select, .item-row input { flex: 1; margin: 0; }
+        .item-row input[type="number"] { max-width: 80px; }
+        .remove-btn { background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;}
+        
+        .add-item-box { background: #e8f4f8; padding: 15px; border-radius: 8px; border: 1px solid #bce0fd; margin-bottom: 20px;}
+        .add-item-box h4 { margin-top: 0; margin-bottom: 10px; color: #2980b9;}
+        .add-row { display: flex; gap: 10px; }
+        .add-btn { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;}
+        
+        .total-box { font-size: 1.4em; font-weight: bold; color: #2ecc71; text-align: right; margin-bottom: 20px; }
+        .save-btn { background: #25D366; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1em; transition: 0.2s;}
+        .save-btn:hover { background: #20b858; }
+        
+        #editor-section { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Edit Customer Order</h1>
+        
+        <div class="form-group">
+            <label>Select Order to Edit:</label>
+            <select id="order-select" onchange="loadOrder()">
+                <option value="">-- Loading Orders... --</option>
+            </select>
+        </div>
+
+        <div id="editor-section">
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <div style="flex: 1;">
+                    <label>Customer Name:</label>
+                    <input type="text" id="edit-name" disabled style="background: #eee;">
+                </div>
+                <div style="flex: 1;">
+                    <label>Phone:</label>
+                    <input type="text" id="edit-phone" disabled style="background: #eee;">
+                </div>
+            </div>
+
+            <label>Current Items:</label>
+            <div class="item-list" id="current-items">
+                <!-- Items inject here -->
+            </div>
+
+            <div class="add-item-box">
+                <h4>+ Add New Item to Order</h4>
+                <div class="add-row">
+                    <select id="new-item-name">
+                        <option value="">-- Select Product --</option>
+                    </select>
+                    <select id="new-item-size" style="max-width: 120px;">
+                        <option value="0.25">250 g</option>
+                        <option value="0.5">500 g</option>
+                        <option value="1">1 kg</option>
+                        <option value="2">2 kg</option>
+                    </select>
+                    <input type="number" id="new-item-qty" value="1" min="1" style="max-width: 80px;">
+                    <button class="add-btn" onclick="addNewItem()">Add</button>
+                </div>
+            </div>
+
+            <div class="total-box">
+                New Total: ₹<span id="edit-total">0</span>
+            </div>
+
+            <button class="save-btn" onclick="saveChanges()">Save Changes & Overwrite Order</button>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzXhT0h_Ib2xXu6MPQzYK5uN8gcf9Sv3m1pG20iLHTnKJ2WKW8ymZO6dbkbfoXe9wzWHg/exec'; 
+        
+        const RESPONSES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRMoaZvcXqrD0KWIEHEOdCFjHUMNu9NMUkhJxOoir9fDwMNJtO55Lkp1C4vWAgXlVbJ8v1BIz7CtiuU/pub?output=csv';
+        const PRODUCTS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQkdpMJkEjlGqWVQmKUy9GZk_tabKkAxxgDrW5SGpe2r3vL-uoWOInuvhomxTdsrihJEhqfKvAQHFAK/pub?output=csv';
+
+        let allProducts = {}; 
+        let rawOrders = [];
+        let currentEditingOrder = { row: null, name: '', phone: '', place: '', items: [] };
+
+        // 1. BULLETPROOF DATA FETCHING
+        Papa.parse(PRODUCTS_CSV_URL, {
+            download: true,
+            header: true,
+            complete: function(res) {
+                res.data.forEach(p => {
+                    if(p.name) allProducts[p.name] = parseInt(p.price);
+                });
+                populateProductDropdown();
+            }
+        });
+
+        Papa.parse(RESPONSES_CSV_URL, {
+            download: true,
+            header: true,
+            complete: function(res) {
+                rawOrders = res.data;
+                populateOrderDropdown();
+            }
+        });
+
+        function populateProductDropdown() {
+            const select = document.getElementById('new-item-name');
+            for (const name in allProducts) {
+                select.innerHTML += `<option value="${name}">${name}</option>`;
+            }
+        }
+
+        function populateOrderDropdown() {
+            const select = document.getElementById('order-select');
+            select.innerHTML = '<option value="">-- Choose an Order --</option>';
+            
+            // Loop backwards to show newest first
+            for (let i = rawOrders.length - 1; i >= 0; i--) {
+                const row = rawOrders[i];
+                // Safely grab the text regardless of column name
+                const rawText = row[Object.keys(row)[1]]; 
+                if (!rawText || rawText.trim() === '') continue;
+
+                // SMART REGEX: Works even if the old orders don't have the 👤 emoji
+                const nameMatch = rawText.match(/(?:👤 )?\*Name:\* (.*?)(?:\r?\n|$)/);
+                const name = nameMatch ? nameMatch[1].trim() : 'Unknown';
+                const date = row[Object.keys(row)[0]]; 
+                
+                select.innerHTML += `<option value="${i}">Row ${i + 2}: ${name} (${date})</option>`;
+            }
+        }
+
+        function loadOrder() {
+            const orderIndex = document.getElementById('order-select').value;
+            if (orderIndex === "") {
+                document.getElementById('editor-section').style.display = 'none';
+                return;
+            }
+
+            const rowData = rawOrders[orderIndex];
+            const rawText = rowData[Object.keys(rowData)[1]];
+            
+            // SMART REGEX: Safely extracts data with or without emojis
+            const nameMatch = rawText.match(/(?:👤 )?\*Name:\* (.*?)(?:\r?\n|$)/);
+            const phoneMatch = rawText.match(/(?:📞 )?\*Phone:\* (.*?)(?:\r?\n|$)/);
+            const placeMatch = rawText.match(/(?:📍 )?\*Place:\* (.*?)(?:\r?\n|$)/);
+
+            currentEditingOrder.row = parseInt(orderIndex) + 2; 
+            currentEditingOrder.name = nameMatch ? nameMatch[1].trim() : '';
+            currentEditingOrder.phone = phoneMatch ? phoneMatch[1].trim() : '';
+            currentEditingOrder.place = placeMatch ? placeMatch[1].trim() : '';
+            currentEditingOrder.items = [];
+
+            // Extract Items
+            const itemRegex = /▪ (\d+) x (.*?) \[Size: (.*?)\] = ₹(\d+)/g;
+            let match;
+            while ((match = itemRegex.exec(rawText)) !== null) {
+                currentEditingOrder.items.push({
+                    qty: parseInt(match[1]),
+                    name: match[2].trim(),
+                    sizeLabel: match[3].trim()
+                });
+            }
+
+            document.getElementById('edit-name').value = currentEditingOrder.name;
+            document.getElementById('edit-phone').value = currentEditingOrder.phone;
+            
+            document.getElementById('editor-section').style.display = 'block';
+            renderOrderItems();
+        }
+
+        // Helper to convert label to multiplier (e.g. "250 g" -> 0.25)
+        function getSizeMultiplier(label) {
+            if (label.includes('250')) return 0.25;
+            if (label.includes('500')) return 0.5;
+            if (label.includes('1 kg')) return 1;
+            if (label.includes('2 kg')) return 2;
+            return 1;
+        }
+
+        function renderOrderItems() {
+            const container = document.getElementById('current-items');
+            container.innerHTML = '';
+            let newTotal = 0;
+
+            currentEditingOrder.items.forEach((item, index) => {
+                const basePrice = allProducts[item.name] || 0;
+                const multiplier = getSizeMultiplier(item.sizeLabel);
+                const itemTotal = Math.round(basePrice * multiplier) * item.qty;
+                newTotal += itemTotal;
+
+                container.innerHTML += `
+                    <div class="item-row">
+                        <strong style="flex: 2;">${item.name}</strong>
+                        <span style="flex: 1; color: #777;">${item.sizeLabel}</span>
+                        
+                        <input type="number" value="${item.qty}" min="1" 
+                            onchange="updateItemQty(${index}, this.value)">
+                            
+                        <strong style="width: 70px; text-align: right;">₹${itemTotal}</strong>
+                        <button class="remove-btn" onclick="removeItem(${index})">X</button>
+                    </div>
+                `;
+            });
+
+            document.getElementById('edit-total').innerText = newTotal;
+        }
+
+        function updateItemQty(index, newQty) {
+            currentEditingOrder.items[index].qty = parseInt(newQty);
+            renderOrderItems();
+        }
+
+        function removeItem(index) {
+            currentEditingOrder.items.splice(index, 1);
+            renderOrderItems();
+        }
+
+        function addNewItem() {
+            const name = document.getElementById('new-item-name').value;
+            const sizeSelect = document.getElementById('new-item-size');
+            const sizeLabel = sizeSelect.options[sizeSelect.selectedIndex].text;
+            const qty = parseInt(document.getElementById('new-item-qty').value);
+
+            if (!name) return alert("Select a product first.");
+
+            currentEditingOrder.items.push({ name: name, sizeLabel: sizeLabel, qty: qty });
+            renderOrderItems();
+        }
+
+        function saveChanges() {
+            if (currentEditingOrder.items.length === 0) return alert("Order must have at least one item!");
+
+            // 1. Rebuild the exact text format
+            let newText = `Hello *Sasreya Foods*! 👋\nI would like to place an order. Here are my details:\n\n`;
+            newText += `👤 *Name:* ${currentEditingOrder.name}\n`;
+            newText += `📞 *Phone:* ${currentEditingOrder.phone}\n`;
+            newText += `📍 *Place:* ${currentEditingOrder.place}\n`;
+            newText += `-------------------------------------\n*My Order Items:*\n`;
+            
+            let finalTotal = 0;
+            currentEditingOrder.items.forEach(item => {
+                const basePrice = allProducts[item.name] || 0;
+                const pricePerItem = Math.round(basePrice * getSizeMultiplier(item.sizeLabel));
+                newText += `▪ ${item.qty} x ${item.name} [Size: ${item.sizeLabel}] = ₹${pricePerItem * item.qty}\n`;
+                finalTotal += pricePerItem * item.qty;
+            });
+
+            newText += `\n*Total Amount: ₹${finalTotal}*\n`;
+            const currentYear = new Date().getFullYear();
+            newText += `\n*© ${currentYear} sasreya.netlify.app*\n`;
+
+            // 2. Send to Google Apps Script
+            const formData = new URLSearchParams();
+            formData.append('row', currentEditingOrder.row);
+            formData.append('text', newText);
+
+            document.querySelector('.save-btn').innerText = "Saving to Google Sheets...";
+
+            fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', 
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData.toString()
+            }).then(() => {
+                alert("Order updated perfectly! The Settlement Calculator will now use these new numbers.");
+                window.location.reload(); 
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sasreya Admin - Order History</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f6f8; padding: 20px; color: #333; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        
+        h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-top: 0; display: flex; justify-content: space-between; align-items: center;}
+        
+        /* --- Filter Controls --- */
+        .filters { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #eee;}
+        .filter-group { display: flex; flex-direction: column; flex: 1; min-width: 200px; }
+        .filter-group label { font-size: 0.85em; font-weight: bold; color: #666; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .filter-group select, .filter-group input { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1em; outline: none; transition: 0.2s;}
+        .filter-group select:focus, .filter-group input:focus { border-color: #3498db; box-shadow: 0 0 5px rgba(52, 152, 219, 0.2); }
+        
+        .reset-btn { background: #e74c3c; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; align-self: flex-end; height: 40px; transition: 0.2s;}
+        .reset-btn:hover { background: #c0392b; }
+
+        /* --- Modern Table --- */
+        .table-responsive { overflow-x: auto; border-radius: 8px; border: 1px solid #eee; }
+        table { width: 100%; border-collapse: collapse; text-align: left; background: white; white-space: nowrap; }
+        th, td { padding: 15px; border-bottom: 1px solid #eee; }
+        th { background-color: #2c3e50; color: white; font-weight: 600; font-size: 0.95em; letter-spacing: 0.5px; position: sticky; top: 0;}
+        tr:hover { background-color: #f0fdf4; }
+        
+        /* Styling Specific Columns */
+        .col-date { color: #777; font-size: 0.9em; }
+        .col-name { font-weight: bold; color: #2c3e50; }
+        .col-items { white-space: normal; min-width: 250px; color: #555; line-height: 1.4; font-size: 0.9em; }
+        .col-total { font-weight: bold; color: #2ecc71; font-size: 1.1em; }
+        
+        .loader { text-align: center; padding: 40px; color: #777; font-size: 1.2em; }
+        .no-results { text-align: center; padding: 30px; color: #e74c3c; font-weight: bold; display: none; }
+        
+        /* Highlight specific text */
+        .wizzmoni-badge { background: #3498db; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-left: 5px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>
+            📦 Order History
+            <span style="font-size: 0.6em; color: #777; font-weight: normal;">Sasreya Foods Admin</span>
+        </h1>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label>Filter by Name</label>
+                <select id="filter-name" onchange="applyFilters()">
+                    <option value="">All Customers</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Filter by Date</label>
+                <select id="filter-date" onchange="applyFilters()">
+                    <option value="">All Dates</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Search Details (Phone/Place)</label>
+                <input type="text" id="filter-search" placeholder="Type to search..." onkeyup="applyFilters()">
+            </div>
+            
+            <button class="reset-btn" onclick="resetFilters()">Reset</button>
+        </div>
+
+        <div class="table-responsive">
+            <table id="orders-table">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Customer Name</th>
+                        <th>Phone</th>
+                        <th>Location</th>
+                        <th>Order Items</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <tr><td colspan="6" class="loader">Fetching orders from database...</td></tr>
+                </tbody>
+            </table>
+            <div id="no-results" class="no-results">No orders match your filters.</div>
+        </div>
+    </div>
+
+    <script>
+        const RESPONSES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRMoaZvcXqrD0KWIEHEOdCFjHUMNu9NMUkhJxOoir9fDwMNJtO55Lkp1C4vWAgXlVbJ8v1BIz7CtiuU/pub?output=csv';
+
+        let allOrders = [];
+
+        // 1. Fetch and Parse Data
+        Papa.parse(RESPONSES_CSV_URL, {
+            download: true,
+            header: true,
+            complete: function(results) {
+                processRawData(results.data);
+            }
+        });
+
+        function processRawData(data) {
+            allOrders = [];
+            const uniqueNames = new Set();
+            const uniqueDates = new Set();
+
+            // Loop through data backwards to show newest first
+            for (let i = data.length - 1; i >= 0; i--) {
+                const row = data[i];
+                const rawTimestamp = row[Object.keys(row)[0]]; // Column A
+                const rawText = row[Object.keys(row)[1]];      // Column B
+                
+                if (!rawText || rawText.trim() === '') continue;
+
+                // Extract data using Smart Regex (Handles emojis or no emojis)
+                const nameMatch = rawText.match(/(?:👤 )?\*Name:\* (.*?)(?:\r?\n|$)/);
+                const phoneMatch = rawText.match(/(?:📞 )?\*Phone:\* (.*?)(?:\r?\n|$)/);
+                const placeMatch = rawText.match(/(?:📍 )?\*Place:\* (.*?)(?:\r?\n|$)/);
+                const totalMatch = rawText.match(/\*Total Amount: ₹(\d+)\*/);
+
+                const name = nameMatch ? nameMatch[1].trim() : 'Unknown';
+                const phone = phoneMatch ? phoneMatch[1].trim() : '-';
+                const place = placeMatch ? placeMatch[1].trim() : '-';
+                const total = totalMatch ? parseInt(totalMatch[1]) : 0;
+                
+                // Format Date for filtering
+                const dateOnly = rawTimestamp ? rawTimestamp.split(' ')[0] : 'Unknown Date';
+
+                // Extract Items neatly
+                let itemsListHTML = '';
+                const itemRegex = /▪ (\d+) x (.*?) \[Size: (.*?)\]/g;
+                let match;
+                while ((match = itemRegex.exec(rawText)) !== null) {
+                    itemsListHTML += `• ${match[1]}x ${match[2]} <small>(${match[3]})</small><br>`;
+                }
+
+                allOrders.push({
+                    fullDate: rawTimestamp,
+                    shortDate: dateOnly,
+                    name: name,
+                    phone: phone,
+                    place: place,
+                    itemsHTML: itemsListHTML || 'No items parsed',
+                    total: total,
+                    isWizzmoni: place.toLowerCase().includes('wizzmoni')
+                });
+
+                uniqueNames.add(name);
+                if(dateOnly !== 'Unknown Date') uniqueDates.add(dateOnly);
+            }
+
+            populateDropdowns(uniqueNames, uniqueDates);
+            renderTable(allOrders);
+        }
+
+        // 2. Setup Dropdown Filters
+        function populateDropdowns(names, dates) {
+            const nameSelect = document.getElementById('filter-name');
+            const dateSelect = document.getElementById('filter-date');
+            
+            // Sort names alphabetically
+            Array.from(names).sort().forEach(name => {
+                nameSelect.innerHTML += `<option value="${name}">${name}</option>`;
+            });
+
+            // Add dates (they are generally already in chronological order)
+            Array.from(dates).forEach(date => {
+                dateSelect.innerHTML += `<option value="${date}">${date}</option>`;
+            });
+        }
+
+        // 3. Render Table
+        function renderTable(ordersToDisplay) {
+            const tbody = document.getElementById('table-body');
+            const noResults = document.getElementById('no-results');
+            tbody.innerHTML = '';
+
+            if (ordersToDisplay.length === 0) {
+                noResults.style.display = 'block';
+                return;
+            }
+            
+            noResults.style.display = 'none';
+
+            ordersToDisplay.forEach(order => {
+                // Add a small blue badge if the location is Wizzmoni
+                let placeDisplay = order.place;
+                if (order.isWizzmoni) {
+                    placeDisplay += ` <span class="wizzmoni-badge">Wizzmoni</span>`;
+                }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="col-date">${order.fullDate}</td>
+                        <td class="col-name">${order.name}</td>
+                        <td><a href="https://wa.me/91${order.phone}" target="_blank" style="text-decoration: none; color: #3498db;">${order.phone}</a></td>
+                        <td>${placeDisplay}</td>
+                        <td class="col-items">${order.itemsHTML}</td>
+                        <td class="col-total">₹${order.total}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // 4. Handle Filtering Logic
+        function applyFilters() {
+            const nameFilter = document.getElementById('filter-name').value;
+            const dateFilter = document.getElementById('filter-date').value;
+            const searchFilter = document.getElementById('filter-search').value.toLowerCase().trim();
+
+            const filteredOrders = allOrders.filter(order => {
+                // Check Name Match
+                if (nameFilter !== "" && order.name !== nameFilter) return false;
+                
+                // Check Date Match
+                if (dateFilter !== "" && order.shortDate !== dateFilter) return false;
+                
+                // Check Text Search (searches Phone and Place)
+                if (searchFilter !== "") {
+                    const searchString = (order.phone + " " + order.place).toLowerCase();
+                    if (!searchString.includes(searchFilter)) return false;
+                }
+                
+                return true; 
+            });
+
+            renderTable(filteredOrders);
+        }
+
+        function resetFilters() {
+            document.getElementById('filter-name').value = "";
+            document.getElementById('filter-date').value = "";
+            document.getElementById('filter-search').value = "";
+            renderTable(allOrders);
+        }
+    </script>
+</body>
+</html>
